@@ -1,0 +1,49 @@
+{
+  "name": "hawkerline",
+  "version": "1.0.0",
+  "description": "Restaurant ordering, kitchen display, menu and POS system that an AI agent can operate (MCP, REST, llms.txt). One Cloudflare Worker + one D1 database.",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "demo:seed": "wrangler d1 execute DB --local --file seed/demo.sql",
+    "check": "node --check worker/index.js && node --check worker/agent.js",
+    "dry-run": "wrangler deploy --dry-run --outdir .wrangler-dryrun",
+    "docs:agent": "node tools/gen-agent-docs.mjs",
+    "test": "npm run check && npm run dry-run && node --test tests/*.test.mjs",
+    "mutate": "bash tools/mutation-test.sh",
+    "deploy": "wrangler deploy",
+    "print-agent": "node tools/kitchen-print-agent.mjs"
+  },
+  "keywords": [
+    "restaurant",
+    "pos",
+    "online-ordering",
+    "kitchen-display",
+    "mcp",
+    "ai-agents",
+    "cloudflare-workers",
+    "d1"
+  ],
+  "author": "Leonard Chow Yi Ding",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "dependencies": {
+    "iconv-lite": "^0.7.0",
+    "leaflet": "^1.9.4",
+    "qrcode-svg": "^1.1.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.2.0",
+    "wrangler": "^4.95.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "sharp@0.35.2": true,
+    "workerd@1.20260801.1": true
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.13"
+  }
+}

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>收银台 POS</title>
+<link rel="icon" href="/img/logo.svg">
+<style>
+  :root { --green:#1C4A3A; --cream:#F6EFE0; --cream2:#FBF7EC; --gold:#B98A2F; --gold2:#D8B45F; --ink:#33301F; --muted:#6E6650; --red:#A23B2D; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html,body { height:100%; }
+  body { font-family:system-ui,'Noto Sans CJK SC',sans-serif; color:var(--ink); background:var(--cream); display:flex; flex-direction:column; }
+  #app { flex:1; min-height:0; display:flex; flex-direction:column; }   /* 撑满 body：登录态 .login margin:auto 才能垂直居中；主界面 .grid flex:1 独立滚动 + .bar 固定底部（否则商品多时收款栏被推出屏外） */
+  header { background:var(--green); color:#F4E7C8; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  header .t { font-weight:700; font-size:16px; }
+  header .today { font-size:12px; opacity:.9; text-align:right; }
+  header .clock { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  header .clock button { background:#F4E7C8; color:var(--green); border:none; border-radius:12px; padding:7px 10px; font-weight:800; font-size:12px; }
+  /* login */
+  .login { margin:auto; display:flex; flex-direction:column; gap:12px; width:280px; }
+  .login input { padding:14px; font-size:16px; border:1px solid var(--gold2); border-radius:10px; }
+  .login button { padding:14px; font-size:16px; font-weight:700; background:var(--green); color:#fff; border:none; border-radius:10px; }
+  /* product grid */
+  .grid { flex:1; overflow:auto; padding:10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; align-content:start; }
+  .cat { grid-column:1/-1; font-weight:700; color:var(--green); font-size:14px; margin:6px 2px 0; }
+  .tile { position:relative; background:#fff; border:1px solid var(--gold2); border-radius:14px; padding:10px 8px; min-height:84px;
+    display:flex; flex-direction:column; justify-content:space-between; cursor:pointer; transition:transform .05s; }
+  .tile:active { transform:scale(.95); }
+  .tile.has { border-color:var(--green); background:#EAF1EC; }
+  .tile .nm { font-size:13px; font-weight:700; line-height:1.25; }
+  .tile .pr { font-size:13px; color:var(--red); font-weight:700; }
+  .tile .badge { position:absolute; top:-8px; right:-8px; min-width:26px; height:26px; border-radius:13px; background:var(--green); color:#fff;
+    font-weight:700; font-size:14px; display:none; align-items:center; justify-content:center; padding:0 6px; }
+  .tile .minus { position:absolute; bottom:-8px; right:-8px; width:28px; height:28px; border-radius:14px; background:var(--red); color:#fff;
+    border:none; font-size:18px; line-height:1; display:none; align-items:center; justify-content:center; }
+  .tile.has .badge, .tile.has .minus { display:flex; }
+  /* bottom bar */
+  .bar { background:var(--green); color:#fff; padding:12px 14px calc(12px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }   /* 按钮变多后窄屏换行，避免「收款」被挤出屏外 */
+  .bar .sum { flex:1; }
+  .bar .sum .n { font-size:12px; opacity:.85; }
+  .bar .sum .amt { font-size:26px; font-weight:700; line-height:1; }
+  .bar .pay { display:flex; gap:6px; }
+  .bar .pay button { padding:12px 12px; border-radius:18px; border:1px solid #F4E7C8; background:transparent; color:#F4E7C8; font-size:13px; font-weight:700; }
+  .bar .pay button.on { background:#F4E7C8; color:var(--green); }
+  .bar .clear { background:transparent; border:1px solid #F4E7C8; color:#F4E7C8; border-radius:12px; padding:10px 12px; font-size:14px; }
+  .bar .pay-btn { background:var(--gold2); color:var(--green); border:none; border-radius:14px; padding:14px 20px; font-size:17px; font-weight:700; }
+  .bar .pay-btn:disabled { opacity:.4; }
+  .toast { position:fixed; left:50%; top:40%; transform:translate(-50%,-50%); background:rgba(28,74,58,.96); color:#fff;
+    padding:18px 26px; border-radius:14px; font-size:18px; font-weight:700; display:none; z-index:80; max-width:86vw; text-align:center; white-space:pre-line; }
+  .toast.show { display:block; }
+  .mask.show ~ .toast { top:14%; }   /* 弹层开着时（退运费成功后列表还在），提示上移，别盖住底下的单子 */
+  /* 弹层（充值 / 退运费）：全屏遮罩 + 卡片，触屏大按钮，卡片内滚动 */
+  input, textarea { user-select:text; -webkit-user-select:text; }   /* 上面 * 里 user-select:none 会让输入框没法选中改字 */
+  .mask { position:fixed; inset:0; background:rgba(28,74,58,.55); display:none; align-items:flex-start; justify-content:center; z-index:60; padding:12px; overflow:auto; }
+  .mask.show { display:flex; }
+  .sheet { background:var(--cream2); border-radius:18px; width:min(560px,100%); max-height:calc(100vh - 24px); display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.35); }
+  .sheet h3 { background:var(--green); color:#F4E7C8; padding:13px 14px; font-size:17px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .sheet h3 button { background:transparent; border:1px solid #F4E7C8; color:#F4E7C8; border-radius:10px; padding:9px 14px; font-size:14px; font-weight:700; }
+  .sheet .body { padding:14px; overflow:auto; display:flex; flex-direction:column; gap:12px; }
+  .sheet label { display:block; font-size:13px; font-weight:700; color:var(--muted); margin-bottom:6px; }
+  .sheet input { width:100%; padding:14px; font-size:18px; border:1px solid var(--gold2); border-radius:12px; background:#fff; color:var(--ink); }
+  .btn { padding:14px 16px; border:none; border-radius:12px; font-size:16px; font-weight:800; background:var(--green); color:#fff; }
+  .btn.gold { background:var(--gold); color:#fff; }
+  .btn.red { background:var(--red); color:#fff; }
+  .btn:disabled { opacity:.45; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chips button { flex:1 1 66px; padding:13px 6px; border-radius:12px; border:1px solid var(--gold2); background:#fff; color:var(--ink); font-size:15px; font-weight:700; }
+  .chips button.on { background:var(--green); color:#fff; border-color:var(--green); }
+  /* 会员核对卡：充值前店员必须肉眼确认「眼前这个人」= 屏幕上这个账号 */
+  .who { border:2px dashed var(--gold); border-radius:14px; padding:12px 14px; background:#FCF3DF; }
+  .who.ok { border-style:solid; border-color:var(--green); background:#EAF1EC; }
+  .who .nm2 { font-size:22px; font-weight:800; color:var(--green); line-height:1.2; }
+  .who .ph { font-size:15px; color:var(--muted); margin-top:3px; }
+  .who .bal { font-size:14px; margin-top:8px; }
+  .who .bal b { font-size:24px; color:var(--red); }
+  .who .hint { font-size:13px; font-weight:700; color:var(--gold); margin-top:8px; }
+  .err { color:var(--red); font-size:14px; font-weight:700; min-height:18px; white-space:pre-line; }
+  .rows { display:flex; flex-direction:column; gap:10px; max-height:50vh; overflow:auto; -webkit-overflow-scrolling:touch; }
+  .row { background:#fff; border:1px solid var(--gold2); border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
+  .row .info { flex:1; min-width:0; }
+  .row .info .l1 { font-weight:800; font-size:15px; }
+  .row .info .l2 { font-size:12px; color:var(--muted); margin-top:3px; }
+  .row .fee { font-size:19px; font-weight:800; color:var(--red); white-space:nowrap; }
+  .row button { padding:13px 14px; border-radius:12px; border:none; background:var(--red); color:#fff; font-weight:800; font-size:14px; white-space:nowrap; }
+  .row button:disabled { opacity:.45; }
+  .empty { padding:18px 6px; text-align:center; color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="mask" id="mask"></div>
+<div class="toast" id="toast"></div>
+<script>
+let TOKEN = sessionStorage.getItem('hl_staff') || '';
+let CASHIER = sessionStorage.getItem('hl_cashier') || '';
+const app = document.getElementById('app');
+const cart = {};          // sku -> {p, qty}
+let PRODUCTS = [], PAY = 'cash';
+let CONFIG = { pricing: { gst_registered: false, gst_rate: 9, service_charge_enabled: false, service_charge_rate: 10 } };
+let PROMO = null, BALPHONE = null;   // PROMO={code,discount} 当前优惠券；BALPHONE=余额收款锁定的会员手机号
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');   // 商品名转义（未来商品名可编辑后防 stored XSS）
+let _saleTok = null;           // POS 收款幂等令牌：一次收款一个，失败重试用同令牌，成功后换新（后端按 client_token 去重，防双击/重试双记）
+let MENU_REVISION = null;      // 当前这批菜单属于哪个发布
+let _acceptedRevision = null;  // 店员显式确认过的新发布版本
+let _tenderSeq = 0;            // 收款状态轮次：增减商品、清空、切换收款方式、应用优惠券、菜单变更、成交都会 +1；
+                               // 在途的优惠券预览、会员余额查询回来时轮次变了就作废，不能把旧金额写回来
+let _acceptedSkus = new Set(); // 确认时核对过的商品：只有这单全是这些商品，才按新版本成交；其余一律按屏幕上菜单的版本提交
+let CATS = {};   // {key: 中文名}，随 /api/menu 的已发布分类一起更新
+
+function login() {
+  app.innerHTML = `<header><span class="t">收银台 POS</span></header>
+    <form class="login" onsubmit="doLogin();return false" autocomplete="on">
+      <select id="cashier" name="username" autocomplete="username" style="padding:14px;font-size:16px;border:1px solid var(--gold2);border-radius:10px">
+        <option value="pos1">收银员 1 (pos1)</option><option value="pos2">收银员 2 (pos2)</option><option value="pos3">收银员 3 (pos3)</option>
+      </select>
+      <input id="pin" name="password" type="password" autocomplete="current-password" placeholder="PIN 密码" inputmode="numeric">
+      <button type="submit">登录收银台</button>
+      <div id="lerr" style="color:var(--red);font-size:13px;text-align:center"></div></form>`;
+}
+window.doLogin = async () => {
+  const cashier = document.getElementById('cashier').value, pin = document.getElementById('pin').value.trim();
+  try {
+    const r = await fetch('/api/pos/login', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ cashier, pin }) });
+    const d = await r.json();
+    if (!d.ok) { document.getElementById('lerr').textContent = d.error || '登录失败'; return; }
+    TOKEN = d.token; CASHIER = d.cashier;
+    sessionStorage.setItem('hl_staff', TOKEN); sessionStorage.setItem('hl_cashier', CASHIER);
+    start();
+  } catch (e) { document.getElementById('lerr').textContent = '网络错误'; }
+};
+
+function setCategories(list) {
+  CATS = {};
+  for (const c of (list || [])) if (c && c.key) CATS[c.key] = c.cn || c.en || c.key;
+  for (const p of PRODUCTS) if (p.category && !(p.category in CATS)) CATS[p.category] = p.category;
+}
+async function start() {
+  try { const c = await (await fetch('/api/config')).json(); if (c && c.pricing) CONFIG = c; } catch (e) {}
+  try {
+    const r = await fetch('/api/menu'); const d = await r.json();
+    PRODUCTS = d.products || [];
+    MENU_REVISION = d.menu_revision || null;   // 这批价格属于哪个发布：收款时带上，服务端据此判断是否已变
+    setCategories(d.categories);
+  } catch (e) { PRODUCTS = []; MENU_REVISION = null; setCategories([]); }
+  render();   // render() 内部会拉今日营业额 + 打卡状态
+}
+// 菜单在开单期间被换了：整份菜单重新载入，屏幕上每个商品都按下一单实际成交的版本显示。
+// 当前这单里已下架的商品保留并标记不可售，等店员处理；载入失败就保持旧版本，下一单服务端仍会再拦一次。
+async function reloadMenuAfterChange() {
+  try {
+    const d = await (await fetch('/api/menu', { cache: 'no-store' })).json();
+    if (!Array.isArray(d.products) || !d.menu_revision) return false;
+    const fresh = new Map(d.products.map(p => [p.sku, p]));
+    const kept = PRODUCTS.filter(p => cart[p.sku] && !fresh.has(p.sku)).map(p => ({ ...p, unavailable: true }));
+    PRODUCTS = [...d.products, ...kept];
+    for (const sku in cart) cart[sku].p = PRODUCTS.find(p => p.sku === sku) || { ...cart[sku].p, unavailable: true };
+    MENU_REVISION = d.menu_revision;
+    setCategories(d.categories);
+    return true;
+  } catch (e) { return false; }
+}
+
+function render() {
+  let tiles = '';
+  for (const k of Object.keys(CATS)) {
+    const items = PRODUCTS.filter(p => p.category === k);
+    if (!items.length) continue;
+    tiles += `<div class="cat">${esc(CATS[k])}</div>`;
+    for (const p of items) {
+      const q = cart[p.sku]?.qty || 0;
+      tiles += `<div class="tile ${q ? 'has' : ''}" id="t-${p.sku}" onclick="add('${p.sku}')">
+        <div class="nm">${esc(p.name_cn)}</div><div class="pr">S$ ${p.price.toFixed(2)}</div>
+        <div class="badge" id="b-${p.sku}">${q}</div>
+        <button class="minus" onclick="event.stopPropagation();sub('${p.sku}')">−</button></div>`;
+    }
+  }
+  app.innerHTML = `<header><span class="t">收银台 · ${CASHIER}</span><span class="clock"><span class="today" id="today">今日 —</span><span class="today" id="clockState">打卡 —</span><button onclick="clock('in')">上班</button><button onclick="clock('out')">下班</button><button onclick="logout()">退出</button></span></header>
+    <div class="grid">${tiles || '<p style="padding:20px">无在售商品</p>'}</div>
+    <div class="bar">
+      <div class="sum"><div class="n"><span id="cnt">0</span> 件<span id="promo-tag" style="color:#F4E7C8;font-weight:700;opacity:1"></span></div><div class="amt">S$ <span id="amt">0.00</span></div></div>
+      <button class="clear" onclick="clearCart()">清空</button>
+      <button class="clear" onclick="openTopup()">💰 充值</button>
+      <button class="clear" onclick="openRefund()">💸 退运费</button>
+      <button class="clear" id="coupon-btn" onclick="applyCoupon()">优惠券</button>
+      <div class="pay">
+        <button id="pay-cash" class="${PAY === 'cash' ? 'on' : ''}" onclick="setPay('cash')">现金</button>
+        <button id="pay-paynow" class="${PAY === 'paynow' ? 'on' : ''}" onclick="setPay('paynow')">PayNow</button>
+        <button id="pay-balance" class="${PAY === 'balance' ? 'on' : ''}" onclick="payBalance()">余额</button>
+      </div>
+      <button class="pay-btn" id="checkout" disabled onclick="checkout()">收款</button>
+    </div>`;
+  updateBar();
+  refreshToday();        // render() 会把 #today 重置成占位「今日 —」，不在这里重拉，按了「清空」之后店员就再也看不到今日营业额
+  refreshAttendance();
+}
+function tileState(sku) {
+  const q = cart[sku]?.qty || 0;
+  const t = document.getElementById('t-' + sku), b = document.getElementById('b-' + sku);
+  if (t) t.classList.toggle('has', q > 0);
+  if (b) b.textContent = q;
+}
+function resetTender() { if (PROMO || BALPHONE) { PROMO = null; BALPHONE = null; if (PAY === 'balance') setPay('cash'); } }   // 购物车一变，已应用的券/余额锁定即失效（折后金额/余额够不够会变，避免陈旧判断）
+window.add = (sku) => {
+  ++_tenderSeq;
+  const p = PRODUCTS.find(x => x.sku === sku);
+  cart[sku] = { p, qty: (cart[sku]?.qty || 0) + 1 };
+  resetTender(); tileState(sku); updateBar();
+};
+window.sub = (sku) => {
+  if (!cart[sku]) return;
+  ++_tenderSeq;
+  cart[sku].qty--; if (cart[sku].qty <= 0) delete cart[sku];
+  resetTender(); tileState(sku); updateBar();
+};
+window.setPay = (m) => {
+  ++_tenderSeq;
+  PAY = m;
+  if (m !== 'balance') BALPHONE = null;   // 切到现金/PayNow → 解除余额锁定
+  document.getElementById('pay-cash').classList.toggle('on', m === 'cash');
+  document.getElementById('pay-paynow').classList.toggle('on', m === 'paynow');
+  const pb = document.getElementById('pay-balance'); if (pb) pb.classList.toggle('on', m === 'balance');
+};
+window.clearCart = () => { ++_tenderSeq; for (const k in cart) delete cart[k]; PROMO = null; BALPHONE = null; PAY = 'cash'; render(); };   // 收款方式一并回到默认现金：render() 的高亮由 PAY 推导，不回位就会出现「屏幕亮现金、实际记 PayNow」
+window.logout = () => {
+  if (totals().n > 0 && !confirm('购物车里还有没收款的商品，确定退出登录？')) return;
+  for (const k in cart) delete cart[k];
+  PROMO = null; BALPHONE = null; PAY = 'cash'; _saleTok = null;
+  TOKEN = ''; CASHIER = '';
+  sessionStorage.removeItem('hl_staff'); sessionStorage.removeItem('hl_cashier');
+  closeModal(); login();
+};
+window.applyCoupon = async () => {
+  const { s } = totals();
+  if (!(s > 0)) { toast('请先加商品'); return; }
+  if (PROMO) { PROMO = null; if (PAY === 'balance') setPay('cash'); updateBar(); toast('已取消优惠券'); return; }   // 再点一次=取消
+  const code = (prompt('优惠码 Promo code:') || '').trim().toUpperCase();
+  if (!code) return;
+  const seq = _tenderSeq;
+  const r = await fetch('/api/promo/check', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, subtotal: s, fulfilment: 'walkin' }) });
+  const d = await r.json();
+  // 预览期间菜单重新载入或购物车变了：这个折扣是按旧小计算的，不能写回
+  if (seq !== _tenderSeq || totals().s !== s) { toast('购物车、菜单或收款方式已变化，请重新应用优惠券'); return; }
+  if (d.error || !(d.discount > 0)) { toast('券无效：' + (d.error || '无折扣')); return; }
+  PROMO = { code, discount: +d.discount.toFixed(2) };
+  ++_tenderSeq;   // 应付变了：在途的余额查询作废
+  if (PAY === 'balance') setPay('cash');   // 折后金额变了，原余额锁定作废，需重选余额
+  updateBar();
+  toast(`✓ 优惠券 −S$${PROMO.discount.toFixed(2)}`);
+};
+window.payBalance = async () => {
+  const { s } = totals();
+  if (!(s > 0)) { toast('请先加商品'); return; }
+  const phone = (prompt('会员手机号 Member phone（余额收款）:') || '').trim();
+  if (!phone) return;
+  const seq = _tenderSeq;
+  const r = await fetch('/api/pos/member?phone=' + encodeURIComponent(phone), { headers: { authorization: 'Bearer ' + TOKEN } });
+  if (r.status === 401) { sessionStorage.removeItem('hl_staff'); return login(); }
+  const d = await r.json();
+  // 查询期间购物车、菜单或收款方式变了：这个结果按旧应付核对的，不能恢复余额锁定
+  if (seq !== _tenderSeq || totals().s !== s) { toast('购物车、菜单或收款方式已变化，请重新查会员'); return; }
+  if (!d.found) { toast('查无此会员，请先充值'); return; }
+  const net = chargePreview(s, PROMO ? PROMO.discount : 0).total;
+  if (d.balance < net) { toast(`余额不足：S$${d.balance.toFixed(2)} < 应付 S$${net.toFixed(2)}`); return; }
+  BALPHONE = d.phone;
+  setPay('balance');
+  toast(`${d.name || '（该会员未填姓名）'} ${d.phone}\n余额 S$${d.balance.toFixed(2)}，本单扣 S$${net.toFixed(2)}\n请当面核对是不是这位顾客`, 3000);   // 扣的是别人的储值，得把「扣谁的」写在屏幕上让店员核对，不能只报个数字
+};
+/* ===================== 弹层基础（充值 / 退运费共用） ===================== */
+function closeModal() { const m = document.getElementById('mask'); if (!m) return; m.classList.remove('show'); m.innerHTML = ''; }
+function modalAuthFail() { closeModal(); sessionStorage.removeItem('hl_staff'); login(); }   // token 过期：先收弹层再回登录页，别把弹层留在登录界面上
+function setErr(id, msg) { const e = document.getElementById(id); if (e) e.textContent = msg || ''; }
+function normSgPhone(raw) { const d = String(raw == null ? '' : raw).replace(/\D/g, ''); return (d.length === 10 && d.startsWith('65')) ? d.slice(2) : d; }   // 与后端 normPhone 同口径：+65 前缀归一成 8 位
+function validSgPhone(d) { return /^[89]\d{7}$/.test(d); }   // 与后端 sgCounterPhone 同口径，本地先挡一次少一次白跑
+function sgtStamp(x) {
+  if (!x) return '—';
+  const t = new Date(x); if (isNaN(t.getTime())) return String(x);
+  const s = new Date(t.getTime() + 480 * 60000).toISOString();   // UTC → SGT(+8)
+  return s.slice(5, 10) + ' ' + s.slice(11, 16);
+}
+window.closeModal = closeModal;
+
+/* ===================== 会员充值：先查会员核对身份，再充值 =====================
+   手机号是顾客自填、零验证的字段——有人抢注别人的号就能截胡柜台现金充值。
+   所以这里强制两步：① 查会员 → 屏幕大字显示姓名/余额，店员当面和顾客核对；
+   ② 充值时把查到的 user_id 原样回传 expect_user_id，后端不匹配直接拒绝入账。
+   手机号一改，之前的核对立即作废，必须重查。 */
+let TOPUP = null;                        // 已核对的会员 {found,user_id,phone,name,balance}
+let TOPUP_PM = 'cash';                   // 本次充值的收款方式
+let _topupTok = null, _topupKey = '';    // 幂等令牌 + 它绑定的（人|金额|渠道）：同一笔重试沿用，换人/换金额/换渠道必须换新
+const TOPUP_QUICK = [10, 20, 50, 100, 200];
+
+window.openTopup = () => {
+  TOPUP = null; _topupTok = null; _topupKey = '';
+  TOPUP_PM = (PAY === 'paynow') ? 'paynow' : 'cash';
+  const m = document.getElementById('mask');
+  m.innerHTML = `<div class="sheet">
+    <h3><span>💰 会员充值 Top-up</span><button type="button" onclick="closeModal()">关闭</button></h3>
+    <div class="body">
+      <div>
+        <label>① 会员手机号 Member phone（8 位，8 或 9 开头）</label>
+        <div style="display:flex;gap:8px">
+          <input id="tu-phone" inputmode="numeric" autocomplete="off" placeholder="9xxxxxxx" oninput="topupPhoneChanged()">
+          <button type="button" class="btn" id="tu-find" style="white-space:nowrap" onclick="topupFind()">查询会员</button>
+        </div>
+      </div>
+      <div id="tu-who"></div>
+      <div>
+        <label>② 充值金额 Amount S$（单次上限 2000）</label>
+        <input id="tu-amt" inputmode="decimal" autocomplete="off" placeholder="0.00" oninput="setErr('tu-err','')">
+        <div class="chips" style="margin-top:8px">${TOPUP_QUICK.map(v => `<button type="button" onclick="topupQuick(${v})">$${v}</button>`).join('')}</div>
+      </div>
+      <div>
+        <label>③ 收款方式 Payment</label>
+        <div class="chips">
+          <button type="button" id="tu-pm-cash" onclick="topupPm('cash')">现金 Cash</button>
+          <button type="button" id="tu-pm-paynow" onclick="topupPm('paynow')">PayNow</button>
+        </div>
+      </div>
+      <div class="err" id="tu-err"></div>
+      <button type="button" class="btn gold" id="tu-go" onclick="topupSubmit()" disabled>请先查询会员</button>
+    </div></div>`;
+  m.classList.add('show');
+  topupPm(TOPUP_PM); renderTopupWho();
+  const p = document.getElementById('tu-phone'); if (p) p.focus();
+};
+function renderTopupWho() {
+  const box = document.getElementById('tu-who'), go = document.getElementById('tu-go');
+  if (!box) return;
+  if (!TOPUP) {
+    box.innerHTML = `<div class="who"><div class="nm2">尚未核对会员</div>
+      <div class="ph">输入手机号点「查询会员」，这里会显示该号码的姓名和余额</div>
+      <div class="hint">⚠️ 没核对过身份不能充值 · Look up the member first</div></div>`;
+    if (go) { go.disabled = true; go.textContent = '请先查询会员'; }
+    return;
+  }
+  const nm = TOPUP.found ? (TOPUP.name || '（该会员未填姓名）') : '新会员 · 该号码暂无记录';
+  box.innerHTML = `<div class="who ${TOPUP.found ? 'ok' : ''}">
+    <div class="nm2">${esc(nm)}</div>
+    <div class="ph">${esc(TOPUP.phone)}</div>
+    <div class="bal">${TOPUP.found
+      ? `当前余额 Balance　<b>S$ ${TOPUP.balance.toFixed(2)}</b>`
+      : '充值后将为这个号码新建储值账户 · A new stored-value account will be created'}</div>
+    <div class="hint">⚠️ 请当面核对：以上姓名/余额是不是眼前这位顾客本人？对不上就别充。</div></div>`;
+  if (go) { go.disabled = false; go.textContent = `确认充值给「${nm}」`; }   // textContent 赋值，姓名不进 HTML
+}
+window.topupPhoneChanged = () => {
+  setErr('tu-err', '');
+  const el = document.getElementById('tu-phone'); if (!el) return;
+  if (TOPUP && normSgPhone(el.value) !== TOPUP.phone) { TOPUP = null; _topupTok = null; _topupKey = ''; renderTopupWho(); }   // 号码一改，核对作废
+};
+window.topupQuick = (v) => { const el = document.getElementById('tu-amt'); if (el) el.value = (+v).toFixed(2); setErr('tu-err', ''); };
+window.topupPm = (m) => {
+  TOPUP_PM = (m === 'paynow') ? 'paynow' : 'cash';
+  const a = document.getElementById('tu-pm-cash'), b = document.getElementById('tu-pm-paynow');
+  if (a) a.classList.toggle('on', TOPUP_PM === 'cash');
+  if (b) b.classList.toggle('on', TOPUP_PM === 'paynow');
+  setErr('tu-err', '');
+};
+window.topupFind = async () => {
+  const el = document.getElementById('tu-phone'), btn = document.getElementById('tu-find');
+  const phone = normSgPhone(el ? el.value : '');
+  TOPUP = null; _topupTok = null; _topupKey = ''; renderTopupWho();
+  if (!validSgPhone(phone)) { setErr('tu-err', '手机号格式不对：新加坡手机号是 8 位（8 或 9 开头），可带 +65'); return; }
+  if (el) el.value = phone;
+  if (btn) { btn.disabled = true; btn.textContent = '查询中…'; }
+  setErr('tu-err', '');
+  try {
+    const r = await fetch('/api/pos/member?phone=' + encodeURIComponent(phone), { headers: { authorization: 'Bearer ' + TOKEN } });
+    if (r.status === 401) return modalAuthFail();
+    const d = await r.json().catch(() => ({}));
+    // 查询失败 ≠ 查无此人：只要不是 200，就绝不能显示「新会员」并放行充值按钮
+    // （否则老会员在服务端抽风时会被当新号，店员照着屏幕跟顾客说"你没注册过"，甚至去按确认充值）
+    if (!r.ok || d.error) { setErr('tu-err', (d.error || `查询失败 HTTP ${r.status}`) + '\n查不到就别充值，请重试或找老板'); return; }
+    TOPUP = d.found
+      ? { found: true, user_id: d.user_id || null, phone, name: d.name || '', balance: +(d.balance || 0) }
+      : { found: false, user_id: null, phone, name: '', balance: 0 };
+    renderTopupWho();
+  } catch (e) { setErr('tu-err', '网络错误，请重试'); }
+  finally { const b2 = document.getElementById('tu-find'); if (b2) { b2.disabled = false; b2.textContent = '查询会员'; } }
+};
+window.topupSubmit = async () => {
+  if (!TOPUP) { setErr('tu-err', '请先查询会员再充值'); return; }
+  const amtEl = document.getElementById('tu-amt');
+  const amount = +(parseFloat(amtEl ? amtEl.value : '') || 0).toFixed(2);   // 规整两位，挡 NaN/负/科学计数
+  if (!(amount > 0)) { setErr('tu-err', '金额无效'); return; }
+  if (amount > 2000) { setErr('tu-err', '单次上限 S$2000，请分次'); return; }
+  const who = TOPUP.found ? (TOPUP.name || '（未填姓名）') : '新会员';
+  const key = (TOPUP.user_id || 'p:' + TOPUP.phone) + '|' + amount.toFixed(2) + '|' + TOPUP_PM;
+  if (!_topupTok || _topupKey !== key) { _topupTok = crypto.randomUUID(); _topupKey = key; }   // 同一笔失败重试沿用同令牌，后端按 client_token 去重
+  const line = TOPUP.found ? `当前余额：S$${TOPUP.balance.toFixed(2)}` : '（将新建储值账户）';
+  if (!confirm(`确认充值？\n\n会员：${who}\n手机：${TOPUP.phone}\n${line}\n充值：S$${amount.toFixed(2)}（${TOPUP_PM === 'paynow' ? 'PayNow' : '现金'}）\n\n请确认钱是眼前这位顾客交的。`)) return;   // 二次确认，防手滑入账
+  const btn = document.getElementById('tu-go');
+  if (btn) { btn.disabled = true; btn.textContent = '处理中…'; }   // 防重复提交
+  setErr('tu-err', '');
+  try {
+    const r = await fetch('/api/pos/topup', {
+      method: 'POST', headers: { authorization: 'Bearer ' + TOKEN, 'content-type': 'application/json' },
+      body: JSON.stringify({ phone: TOPUP.phone, amount, pay_method: TOPUP_PM, cashier: CASHIER,
+        client_token: _topupTok, expect_user_id: TOPUP.user_id || null }),   // expect_user_id 这个 key 必须在（没查到会员时为 null）
+    });
+    if (r.status === 401) return modalAuthFail();
+    const d = await r.json().catch(() => ({}));
+    if (d.ok) {
+      _topupTok = null; _topupKey = ''; TOPUP = null;
+      closeModal();
+      toast(`✓ ${who} 充 $${(+d.amount || 0).toFixed(2)} 送 $${(+d.bonus || 0).toFixed(2)}\n余额 S$${(+d.balance || 0).toFixed(2)}${d.deduped ? '（重复请求，未重复入账）' : ''}`, 3000);
+      return;
+    }
+    const code = d.code || '';
+    if (code === 'confirm_required' || code === 'member_changed') {
+      TOPUP = null; _topupTok = null; _topupKey = '';   // 强制重查会员，别让店员在陈旧身份上重试
+      setErr('tu-err', (code === 'member_changed'
+        ? '⚠️ 这个手机号对应的会员已变化，请重新「查询会员」并当面核对姓名后再充值'
+        : '⚠️ 请先「查询会员」再充值') + (d.error ? '\n' + d.error : ''));
+    } else if (code === 'client_token_conflict') {
+      _topupTok = null; _topupKey = '';   // 换新令牌，让店员重新发起本笔充值
+      setErr('tu-err', '⚠️ ' + (d.error || '幂等令牌已用在另一笔充值上') + '\n请重新点一次「确认充值」发起本笔充值');
+    } else if (code === 'bad_phone') {
+      setErr('tu-err', '⚠️ ' + (d.error || '手机号格式不对：新加坡手机号是 8 位（8 或 9 开头），可带 +65'));
+    } else {
+      setErr('tu-err', (d.error || '充值失败 HTTP ' + r.status) + (code ? `（${code}）` : ''));
+    }
+  } catch (e) { setErr('tu-err', '网络错误，请重试（本笔令牌已保留，重试不会重复入账）'); }
+  finally { if (document.getElementById('tu-go')) renderTopupWho(); }   // 按钮状态由核对状态决定：会员被清掉就保持禁用
+};
+
+/* ===================== 退运费（店员侧） =====================
+   金额由服务端从订单 delivery_fee 取，店员改不了；老板可在后台关掉这个权限。 */
+let RLIST = [];
+const RBUSY = new Set();   // 正在退款的 order_id：这些行的按钮保持禁用，重搜后也不会变回可点（防同一单被连退两次）
+window.openRefund = () => {
+  RLIST = []; RBUSY.clear();
+  const m = document.getElementById('mask');
+  m.innerHTML = `<div class="sheet">
+    <h3><span>💸 退运费 Refund delivery fee</span><button type="button" onclick="closeModal()">关闭</button></h3>
+    <div class="body">
+      <div>
+        <label>搜索：单号 或 顾客姓名（留空 = 最近可退的单）</label>
+        <div style="display:flex;gap:8px">
+          <input id="rf-q" autocomplete="off" placeholder="单号 / 姓名" onkeydown="if(event.key==='Enter'){event.preventDefault();refundSearch();}">
+          <button type="button" class="btn" id="rf-search" style="white-space:nowrap" onclick="refundSearch()">搜索</button>
+        </div>
+      </div>
+      <div class="err" id="rf-err"></div>
+      <div class="rows" id="rf-rows"><div class="empty">加载中…</div></div>
+    </div></div>`;
+  m.classList.add('show');
+  refundSearch();
+};
+function renderRefundRows(failed) {
+  const box = document.getElementById('rf-rows'); if (!box) return;
+  // 取列表失败 ≠ 没有可退的单：必须分开说，否则店员会以为「这单不能退」而不是「刚才没查成」
+  if (failed) { box.innerHTML = `<div class="empty">⚠️ 没能取到订单列表（${esc(failed)}）<br>这不代表没有可退的单，请点「搜索」重试</div>`; return; }
+  if (!RLIST.length) { box.innerHTML = '<div class="empty">没有可退运费的订单<br>（只列已付款、有运费、且还没退过款的单）</div>'; return; }
+  box.innerHTML = RLIST.map((o, i) => {
+    const busy = RBUSY.has(o.id);
+    return `<div class="row">
+      <div class="info">
+        <div class="l1">${esc(o.invoice_no || o.id)}　${esc(o.customer_name || '—')}</div>
+        <div class="l2">合计 S$ ${(+(o.total || 0)).toFixed(2)} · ${esc(o.fulfilment || '')} · ${esc(sgtStamp(o.created_at))}</div>
+      </div>
+      <div class="fee">运费<br>S$ ${(+(o.delivery_fee || 0)).toFixed(2)}</div>
+      <button type="button" id="rf-b-${i}" ${busy ? 'disabled' : ''} onclick="doRefund(${i})">${busy ? '处理中…' : '退运费'}</button>
+    </div>`;
+  }).join('');
+}
+window.refundSearch = async () => {
+  const qEl = document.getElementById('rf-q'), btn = document.getElementById('rf-search'), box = document.getElementById('rf-rows');
+  const q = qEl ? qEl.value.trim() : '';
+  if (btn) { btn.disabled = true; btn.textContent = '搜索中…'; }
+  if (box) box.innerHTML = '<div class="empty">加载中…</div>';
+  setErr('rf-err', '');
+  try {
+    const r = await fetch('/api/pos/refundable-orders?q=' + encodeURIComponent(q), { headers: { authorization: 'Bearer ' + TOKEN } });
+    if (r.status === 401) return modalAuthFail();
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.error) { RLIST = []; renderRefundRows(d.error || `HTTP ${r.status}`); setErr('rf-err', d.error || `加载失败 HTTP ${r.status}，请重试`); return; }
+    RLIST = Array.isArray(d.orders) ? d.orders : [];
+    renderRefundRows();
+  } catch (e) { RLIST = []; renderRefundRows('网络错误'); setErr('rf-err', '网络错误，请重试'); }
+  finally { const b2 = document.getElementById('rf-search'); if (b2) { b2.disabled = false; b2.textContent = '搜索'; } }
+};
+window.doRefund = async (i) => {
+  const o = RLIST[i]; if (!o) return;
+  if (RBUSY.has(o.id)) return;   // 这单已经在退了（哪怕中途重搜过、按钮看着是新的）
+  const fee = +(o.delivery_fee || 0);
+  if (!confirm(`确认退运费？\n\n单号：${o.invoice_no || o.id}\n顾客：${o.customer_name || '—'}\n退款金额：S$${fee.toFixed(2)}\n\n退款会真的退钱出去，不可撤销。`)) return;   // 二次确认，明确显示要退多少
+  RBUSY.add(o.id);
+  const btn = document.getElementById('rf-b-' + i);
+  if (btn) { btn.disabled = true; btn.textContent = '处理中…'; }   // 防重复点
+  setErr('rf-err', '');
+  try {
+    const r = await fetch('/api/pos/refund-delivery-fee', {
+      method: 'POST', headers: { authorization: 'Bearer ' + TOKEN, 'content-type': 'application/json' },
+      body: JSON.stringify({ order_id: o.id }),
+    });
+    if (r.status === 401) return modalAuthFail();
+    const d = await r.json().catch(() => ({}));
+    if (d.ok) {
+      const parts = [];
+      if (+(d.stripe_amount || 0) > 0) parts.push(`原路退卡 S$${(+d.stripe_amount).toFixed(2)}`);
+      if (+(d.balance_amount || 0) > 0) parts.push(`退回储值 S$${(+d.balance_amount).toFixed(2)}`);
+      toast(`✓ 已退运费 S$${(+(d.refunded != null ? d.refunded : fee)).toFixed(2)}${d.deduped ? '（此单之前已退过，未重复退）' : ''}\n${parts.join(' · ')}`, 3600);
+      const k = RLIST.indexOf(o); if (k >= 0) RLIST.splice(k, 1);   // 按对象身份删，不按点击时的下标——请求在飞时店员若重搜过，按下标会删掉一张【没退过】的无关单
+      return;
+    }
+    if (r.status === 403 && d.code === 'pos_refund_disabled') setErr('rf-err', '⚠️ 老板已关闭收银台退运费权限，请找老板操作');
+    else setErr('rf-err', (d.error || '退款失败 HTTP ' + r.status) + (d.code ? `（${d.code}）` : ''));
+  } catch (e) { setErr('rf-err', '网络错误，请重试（未确认是否退成功，请先用搜索确认该单是否还在列表里）'); }
+  finally { RBUSY.delete(o.id); renderRefundRows(); }   // 统一由 RBUSY 决定按钮状态，重搜过也不会把「正在退」的行变回可点
+};
+function totals() { let s = 0, n = 0; for (const k in cart) { s += cart[k].p.price * cart[k].qty; n += cart[k].qty; } return { s, n }; }
+function money(v) { return Math.round((+v || 0) * 100) / 100; }
+function chargePreview(sub, disc) {
+  const p = CONFIG.pricing || {};
+  const goods = Math.max(0, money(sub) - money(disc));
+  const svc = p.service_charge_enabled ? money(goods * (+p.service_charge_rate || 0) / 100) : 0;
+  const taxable = money(goods + svc);
+  const gst = p.gst_registered ? money(taxable * (+p.gst_rate || 0) / 100) : 0;
+  return { service_charge: svc, gst, total: money(taxable + gst) };
+}
+function updateBar() {
+  const { s, n } = totals();
+  const disc = PROMO ? PROMO.discount : 0;
+  const ch = chargePreview(s, disc);
+  const net = ch.total;
+  document.getElementById('amt').textContent = net.toFixed(2);
+  document.getElementById('cnt').textContent = n;
+  const tag = document.getElementById('promo-tag');
+  if (tag) tag.textContent = [
+    disc > 0 ? `券−$${disc.toFixed(2)}` : '',
+    ch.service_charge > 0 ? `服务费$${ch.service_charge.toFixed(2)}` : '',
+    ch.gst > 0 ? `GST$${ch.gst.toFixed(2)}` : '',
+  ].filter(Boolean).map(x => ' · ' + x).join('');
+  document.getElementById('checkout').disabled = n === 0;
+}
+let _toastT = null;
+function toast(msg, ms) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_toastT); _toastT = setTimeout(() => t.classList.remove('show'), ms || 1600); }   // 退款/充值这类结果文案更长，允许调停留时间
+
+window.checkout = async () => {
+  const items = Object.entries(cart).map(([sku, v]) => ({ sku, qty: v.qty }));
+  if (!items.length) return;
+  if (PAY === 'balance' && !BALPHONE) { toast('请先点「余额」查会员'); return; }
+  const btn = document.getElementById('checkout'); btn.disabled = true;
+  if (!_saleTok) _saleTok = crypto.randomUUID();   // 本次收款令牌；重试沿用，成功才换新
+  const body = { items, pay_method: PAY, cashier: CASHIER, client_token: _saleTok,
+    menu_revision: (_acceptedRevision && items.every(i => _acceptedSkus.has(i.sku))) ? _acceptedRevision : MENU_REVISION };
+  if (PROMO) body.promo_code = PROMO.code;          // 服务端会用 walkin 重校验 + 重算折扣（不信前端金额）
+  if (PAY === 'balance') body.phone = BALPHONE;
+  try {
+    const r = await fetch('/api/pos/sale', {
+      method: 'POST', headers: { authorization: 'Bearer ' + TOKEN, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (r.status === 401) { sessionStorage.removeItem('hl_staff'); return login(); }
+    const d = await r.json();
+    // 菜单在开单期间被换了：不自动按新价成交，把差异摆给店员，要再点一次「收款」。
+    if (r.status === 409 && d.code === 'menu_changed') {
+      for (const line of (d.lines || [])) {
+        const item = PRODUCTS.find(p => p.sku === line.sku);
+        if (item && line.available && line.unit_price_cents != null) { item.price = line.unit_price_cents / 100; item.price_cents = line.unit_price_cents; }
+        if (item && !line.available) item.unavailable = true;
+      }
+      _acceptedRevision = d.active_revision;
+      _acceptedSkus = new Set((d.lines || []).map(line => line.sku));
+      // 价格变了，按旧小计算的优惠券折扣和余额锁定都作废：屏幕应收必须等于服务端将要记的金额
+      const hadTender = !!(PROMO || BALPHONE);
+      resetTender(); ++_tenderSeq;
+      // 重新载入成功：屏幕整份换成新菜单，MENU_REVISION 随之更新；失败：保持旧版本，别的商品下一单会再被拦一次
+      await reloadMenuAfterChange();
+      render();
+      const detail = (d.changes || []).map(c => {
+        const name = ((d.lines || []).find(l => l.sku === c.sku) || {}).name_cn || c.sku;
+        if (c.reason === 'contents') return `${name}：组成改为 ${c.new_contents_cn || '（无）'}`;
+        if (c.reason === 'name') return `${c.old_name_cn || c.sku} → ${c.new_name_cn || name}`;
+        return c.reason === 'unavailable' ? `${name}：已下架`
+          : `${name}：S$${((c.old_price_cents || 0) / 100).toFixed(2)} → S$${(c.new_price_cents / 100).toFixed(2)}`;
+      }).join('；');
+      toast('菜单已更新：' + detail + (hadTender ? ' —— 优惠券/余额已取消，请重新应用后再点收款' : ' —— 请确认新价格后再点收款'), hadTender ? 4000 : undefined);
+      btn.disabled = false;
+      return;
+    }
+    if (d.ok) { ++_tenderSeq; _saleTok = null; _acceptedRevision = null; _acceptedSkus = new Set(); PROMO = null; BALPHONE = null; PAY = 'cash'; toast('✓ 收款 S$ ' + d.total.toFixed(2) + (d.pay_method === 'balance' ? ' · 余额' : '')); for (const k in cart) delete cart[k]; render(); }   // 收完一单收款方式回默认现金；下一单要 PayNow 得再点一次，屏幕高亮与 PAY 始终一致
+    else { toast('失败：' + (d.error || '')); btn.disabled = false; }
+  } catch (e) { toast('网络错误'); btn.disabled = false; }
+};
+async function refreshToday() {
+  try {
+    const r = await fetch('/api/pos/today?cashier=' + encodeURIComponent(CASHIER), { headers: { authorization: 'Bearer ' + TOKEN } });
+    if (r.status === 401) { sessionStorage.removeItem('hl_staff'); return login(); }   // 签名 token 过期 → 回登录页重输 PIN
+    const d = await r.json();
+    const el = document.getElementById('today');
+    if (el) el.textContent = `我今日 ${d.orders} 单 · S$ ${(d.revenue || 0).toFixed(2)}`;
+  } catch (e) {}
+}
+async function refreshAttendance() {
+  try {
+    const r = await fetch('/api/pos/attendance/today', { headers: { authorization: 'Bearer ' + TOKEN } });
+    if (r.status === 401) { sessionStorage.removeItem('hl_staff'); return login(); }
+    const d = await r.json();
+    const ins = (d.records || []).find(x => x.kind === 'in');
+    const outs = (d.records || []).find(x => x.kind === 'out');
+    const fmt = x => x ? new Date(new Date(x).getTime() + 480 * 60000).toISOString().slice(11,16) : '—';
+    const el = document.getElementById('clockState');
+    if (el) el.textContent = `上 ${fmt(ins && ins.punched_at)} / 下 ${fmt(outs && outs.punched_at)}`;
+  } catch (e) {}
+}
+window.clock = async (kind) => {
+  const r = await fetch('/api/pos/attendance', { method:'POST', headers:{authorization:'Bearer '+TOKEN,'content-type':'application/json'}, body: JSON.stringify({ kind }) });
+  if (r.status === 401) { sessionStorage.removeItem('hl_staff'); return login(); }
+  const d = await r.json();
+  if (d.ok) { toast((kind === 'out' ? '下班' : '上班') + '打卡成功'); refreshAttendance(); }
+  else toast('打卡失败：' + (d.error || ''));
+};
+
+(TOKEN && CASHIER) ? start() : login();
+</script>
+</body>
+</html>

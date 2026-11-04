@@ -1,0 +1,52 @@
+name = "hawkerline"
+main = "worker/index.js"
+compatibility_date = "2026-04-17"
+
+# Customer storefront, /admin, /pos and /kitchen are static files in web/, served by Workers Assets.
+[assets]
+directory = "web"
+binding = "ASSETS"
+run_worker_first = true
+
+# Create the database once:   npx wrangler d1 create hawkerline
+# then paste the database_id it prints below and run:
+#   npx wrangler d1 migrations apply DB --remote
+[[d1_databases]]
+binding = "DB"
+database_name = "hawkerline"
+database_id = "replace-with-the-id-from-wrangler-d1-create"
+migrations_dir = "migrations"
+
+[vars]
+# Your store's public host name, without https:// (used for canonical URLs, invoice links and the www redirect).
+SHOP_DOMAIN = ""
+# Shown when no brand name has been saved in /admin yet.
+BRAND = ""
+# Legal name printed on invoices. Leave empty to use the brand name.
+MERCHANT = ""
+# Invoice numbers look like ORD-20261104-0001. 2–6 letters or digits.
+INVOICE_PREFIX = "ORD"
+# "stripe" for card payments via Stripe Checkout, "manual" for PayNow QR + manual confirmation.
+PAY_MODE = "manual"
+# PayNow UEN or mobile number used to build the PayNow QR (manual mode).
+PAYNOW_UEN = ""
+# Owner's WhatsApp number in international digits (e.g. 65XXXXXXXX) for paid-order and daily-summary messages. Optional.
+BOSS_PHONE = ""
+# Sign in with Apple (optional). Leave empty to disable.
+APPLE_TEAM_ID = ""
+APPLE_KEY_ID = ""
+APPLE_CLIENT_ID = ""
+
+# Secrets — never put them in this file. Set each with `npx wrangler secret put <NAME>`:
+#   ADMIN_TOKEN            owner password for /admin (use 32+ random characters)
+#   AUTH_SECRET            HMAC key for member, POS, kitchen and preview tokens (32+ random characters)
+#   ADMIN_TOKEN_SECONDARY  optional second owner credential (32+ characters)
+#   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET   Google sign-in (optional)
+#   APPLE_PRIVATE_KEY      Sign in with Apple .p8 key (optional)
+#   STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET  or save them in /admin → payment settings
+#   WHATSAPP_TOKEN / WHATSAPP_PHONE_ID         Meta WhatsApp Cloud API (optional)
+
+[triggers]
+# every minute: scheduled menu releases + payment safety sweeps; 00:00 / 13:00 UTC = 08:00 / 21:00 SGT summaries;
+# every 5 min: courier status; every 30 min: expire unpaid wallet-balance orders.
+crons = ["* * * * *", "0 0 * * *", "0 13 * * *", "*/5 * * * *", "*/30 * * * *"]

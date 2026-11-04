@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hawkerline agent interface: MCP, REST and llms.txt</title>
+<meta name="description" content="How an AI agent operates a Hawkerline store: MCP at /mcp, REST at /api/agent/v1, OpenAPI 3.1, exact tool names and scopes, preview checksum and audit log.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="{{ORIGIN}}/agents.html">
+<link rel="alternate" hreflang="en" href="{{ORIGIN}}/agents.html">
+<link rel="alternate" hreflang="zh" href="{{ORIGIN}}/zh/agents.html">
+<link rel="alternate" hreflang="x-default" href="{{ORIGIN}}/agents.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hawkerline">
+<meta property="og:title" content="Hawkerline agent interface: MCP, REST and llms.txt">
+<meta property="og:description" content="How an AI agent operates a Hawkerline store: MCP at /mcp, REST at /api/agent/v1, OpenAPI 3.1, exact tool names and scopes, preview checksum and audit log.">
+<meta property="og:url" content="{{ORIGIN}}/agents.html">
+<meta property="og:locale" content="en_SG">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hawkerline agent interface: MCP, REST and llms.txt">
+<meta name="twitter:description" content="How an AI agent operates a Hawkerline store: MCP at /mcp, REST at /api/agent/v1, OpenAPI 3.1, exact tool names and scopes, preview checksum and audit log.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Hawkerline","description":"Hawkerline is a source-available restaurant ordering, kitchen display, menu and POS system that an AI agent can operate, built for Singapore food businesses and running on one Cloudflare Worker and one D1 database.","applicationCategory":"BusinessApplication","operatingSystem":"Cloudflare Workers","url":"{{ORIGIN}}/","license":"{{ORIGIN}}/license.html","inLanguage":"en","sameAs":["https://github.com/shuaige121/hawkerline"]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header"><div class="wrap bar">
+<a class="brand" href="index.html"><svg class="logo" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="var(--accent)"/><path d="M9 19h14a7 7 0 0 1-14 0z" fill="var(--on-accent)"/><path d="M12 8c-1.5 1.7 1.5 2.7 0 4.5M17 8c-1.5 1.7 1.5 2.7 0 4.5M22 8c-1.5 1.7 1.5 2.7 0 4.5" fill="none" stroke="var(--on-accent)" stroke-width="1.6" stroke-linecap="round"/></svg><span>Hawkerline</span></a>
+<nav aria-label="Primary"><a href="index.html">Home</a><a href="agents.html" aria-current="page">AI agents</a><a href="license.html">License</a><a href="showcase/poxiaoman.html">Showcase</a><a href="https://github.com/shuaige121/hawkerline">GitHub</a><a class="lang" href="zh/agents.html" hreflang="zh" lang="zh-Hans" aria-label="Switch to Chinese">中文</a></nav>
+</div></header>
+<main id="main">
+
+<section class="hero"><div class="wrap">
+<p class="eyebrow">For LLMs, agents and the people who connect them</p>
+<h1>The Hawkerline agent interface</h1>
+<p class="lede">Hawkerline is a source-available restaurant ordering, kitchen display, menu and POS system that an AI agent can operate, built for Singapore food businesses and running on one Cloudflare Worker and one D1 database. This page describes how an AI agent connects to a Hawkerline store.</p>
+</div></section>
+<section class="section " id="interfaces"><div class="wrap"><h2>Four ways in</h2><div class="tablewrap"><table><thead><tr><th scope="col">Interface</th><th scope="col">Address</th><th scope="col">Notes</th></tr></thead><tbody><tr><th scope="row">MCP server</th><td><code>/mcp</code></td><td>Model Context Protocol over Streamable HTTP with bearer-key auth. Responses are JSON over POST (no server-sent events). Protocol versions 2025-11-25, 2025-06-18 and 2025-03-26.</td></tr><tr><th scope="row">REST API</th><td><code>POST /api/agent/v1/tools/&lt;tool&gt;</code></td><td>The same tools over HTTP, for any HTTP-capable agent, workflow tool or script.</td></tr><tr><th scope="row">OpenAPI document</th><td><code>/api/agent/v1/openapi.json</code></td><td>OpenAPI 3.1 description, for tool-calling frameworks that import OpenAPI.</td></tr><tr><th scope="row">llms.txt</th><td><code>/llms.txt</code></td><td>Served by every deployment. Tells an LLM what the store offers and how to operate it.</td></tr></tbody></table></div>
+<p><strong>Compatibility.</strong> Any MCP client that can send an <code>Authorization: Bearer</code> header over Streamable HTTP works, for example Claude Code. OAuth is not implemented, so connectors that only support OAuth cannot connect directly. Such agents can use the REST API instead.</p></div></section>
+<section class="section alt" id="keys"><div class="wrap"><h2>Agent keys and scopes</h2><p>The owner creates and revokes agent keys in <code>/admin</code> on the AI access page. A key looks like <code>hlk_</code> followed by 40 hex characters. It is shown once and only its hash is stored. Revoking a key cuts the agent off immediately. Each key is limited to 120 calls per minute.</p><div class="tablewrap"><table><thead><tr><th scope="col">Scope</th><th scope="col">Allows</th></tr></thead><tbody><tr><th scope="row"><code>menu:read</code></th><td>Read products, categories and publication status; preview the draft</td></tr><tr><th scope="row"><code>menu:write</code></th><td>Create and edit draft products, images, display order and categories</td></tr><tr><th scope="row"><code>menu:publish</code></th><td>Publish the previewed draft to customers, now or scheduled</td></tr><tr><th scope="row"><code>orders:read</code></th><td>Read orders and the kitchen board</td></tr><tr><th scope="row"><code>orders:write</code></th><td>Move orders through the kitchen flow (new, preparing, ready, done)</td></tr><tr><th scope="row"><code>store:write</code></th><td>Pause or resume online ordering</td></tr><tr><th scope="row"><code>reports:read</code></th><td>Read sales summaries</td></tr></tbody></table></div><p>Give each agent only the scopes it needs.</p></div></section>
+<section class="section " id="tools"><div class="wrap"><h2>Tools and their scopes</h2><p>Every tool is available over both MCP and REST.</p><div class="tablewrap"><table><thead><tr><th scope="col">Tool</th><th scope="col">Scope</th><th scope="col">What it does</th></tr></thead><tbody><tr><th scope="row"><code>get_store_overview</code></th><td><code>menu:read</code></td><td>Start here: store name, whether it accepts orders, categories, product counts, live release and current draft revision</td></tr><tr><th scope="row"><code>list_categories</code></th><td><code>menu:read</code></td><td>Menu categories (key, Chinese label, English label) and how many draft products use each</td></tr><tr><th scope="row"><code>list_products</code></th><td><code>menu:read</code></td><td>All draft products with SGD price, category, components and image status</td></tr><tr><th scope="row"><code>preview_menu</code></th><td><code>menu:read</code></td><td>Compare the draft with the live menu and get a 10-minute preview link; returns draft_checksum and live_release_id</td></tr><tr><th scope="row"><code>set_categories</code></th><td><code>menu:write</code></td><td>Replace the whole category list; order is display order</td></tr><tr><th scope="row"><code>upsert_product</code></th><td><code>menu:write</code></td><td>Create a product or update only the fields you pass, matched by sku</td></tr><tr><th scope="row"><code>bulk_upsert_products</code></th><td><code>menu:write</code></td><td>Create or update up to 100 products in one call, such as a whole menu read from a photo or PDF</td></tr><tr><th scope="row"><code>set_product_availability</code></th><td><code>menu:write</code></td><td>Put a product on or off sale in the draft</td></tr><tr><th scope="row"><code>set_product_image</code></th><td><code>menu:write</code></td><td>Set the product image from an https URL or base64 data (PNG, JPEG or WebP, up to 640 KB)</td></tr><tr><th scope="row"><code>reorder_products</code></th><td><code>menu:write</code></td><td>Set the display order by passing skus in order</td></tr><tr><th scope="row"><code>publish_menu</code></th><td><code>menu:publish</code></td><td>Publish exactly the previewed draft; needs draft_checksum and live_release_id from preview_menu; optional effective_at_sgt schedules it</td></tr><tr><th scope="row"><code>list_orders</code></th><td><code>orders:read</code></td><td>Recent orders; phone numbers are masked unless include_contact is true</td></tr><tr><th scope="row"><code>get_kitchen_board</code></th><td><code>orders:read</code></td><td>Today's paid orders that are not done, with set components expanded</td></tr><tr><th scope="row"><code>advance_order</code></th><td><code>orders:write</code></td><td>Move a paid order to the next kitchen status, or to a later status with "to"</td></tr><tr><th scope="row"><code>set_store_open</code></th><td><code>store:write</code></td><td>Pause or resume new online orders immediately</td></tr><tr><th scope="row"><code>get_sales_summary</code></th><td><code>reports:read</code></td><td>Paid orders, revenue (SGD), GST, service charge and top items for a Singapore-time date range</td></tr></tbody></table></div><p>Menu edits go to a draft. Customers see only a published release. A bulk call accepts up to 100 products.</p></div></section>
+<section class="section alt" id="flow"><div class="wrap"><h2>Example MCP flow: photo of a menu, products, preview, publish</h2><ol class="steps">
+<li><strong>Connect.</strong> Add your store to an MCP client with an agent key that has the scopes you want.</li>
+<li><strong>Photo of a menu.</strong> Give the agent a photo or PDF of the menu.</li>
+<li><strong>Products.</strong> The agent calls <code>set_categories</code> if needed and <code>bulk_upsert_products</code>, with single items before the sets that use them. <code>set_product_image</code> can add images.</li>
+<li><strong>Preview.</strong> <code>preview_menu</code> compares the draft with the live menu and returns <code>draft_checksum</code>, <code>live_release_id</code> and a 10-minute preview link.</li>
+<li><strong>Publish.</strong> <code>publish_menu</code> takes that <code>draft_checksum</code> and <code>live_release_id</code>. If anything changed since the preview, nothing is published and the agent must preview again.</li>
+<li><strong>Operate.</strong> The same agent can use <code>list_orders</code>, <code>get_kitchen_board</code>, <code>advance_order</code>, <code>set_store_open</code> and <code>get_sales_summary</code>, if its key has those scopes.</li>
+</ol></div></section>
+<section class="section " id="connect"><div class="wrap"><h2>Connect a client</h2><p>Replace <code>your-store.example</code> with your store's domain and <code>hlk_…</code> with a key created in <code>/admin</code>.</p>
+<h3>Claude Code</h3><pre><code>claude mcp add --transport http my-store https://your-store.example/mcp \
+  --header &quot;Authorization: Bearer hlk_…&quot;</code></pre>
+<h3>MCP client with a JSON config</h3><p>Field names vary between clients; the client must be able to send an Authorization header to a remote HTTP server.</p><pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;my-store&quot;: {
+      &quot;type&quot;: &quot;http&quot;,
+      &quot;url&quot;: &quot;https://your-store.example/mcp&quot;,
+      &quot;headers&quot;: { &quot;Authorization&quot;: &quot;Bearer hlk_…&quot; }
+    }
+  }
+}</code></pre>
+<h3>REST</h3><pre><code>curl -s https://your-store.example/api/agent/v1/tools/list_products \
+  -H &quot;Authorization: Bearer hlk_…&quot; -H &quot;content-type: application/json&quot; \
+  -d '{&quot;only_on_sale&quot;:true}'</code></pre>
+<p>Responses are <code>{"ok":true,"result":{…}}</code> or <code>{"ok":false,"error":"…","code":"…"}</code> with an HTTP status: 400 invalid arguments, 401 bad key, 403 missing scope, 404, 409 conflict, 429 rate limit.</p></div></section>
+<section class="section alt" id="safety"><div class="wrap"><h2>Safety rails</h2><ul><li><strong>Preview checksum.</strong> An agent can only publish the exact draft it previewed.</li><li><strong>Scopes.</strong> Each key can do only what its scopes allow. Agent keys, payments, members, refunds and store settings stay owner-only.</li><li><strong>Audit log.</strong> Every agent call is written to an audit log the owner can read in <code>/admin</code> on the AI access page.</li><li><strong>Revocation.</strong> The owner can revoke a key instantly.</li><li><strong>Privacy.</strong> Phone numbers in order data are masked unless the agent asks for contact details with <code>include_contact</code>.</li><li><strong>Stale-edit protection.</strong> Concurrent edits are guarded by revision checks; a stale edit is rejected instead of overwriting.</li><li><strong>Rollback.</strong> Rolling back creates a new release from an older one.</li></ul><p>More detail: <a href="https://github.com/shuaige121/hawkerline/blob/main/docs/agents.md">agent guide</a> and <a href="https://github.com/shuaige121/hawkerline/blob/main/docs/agent-tools.md">tool reference</a> on GitHub. Back to <a href="index.html">Hawkerline overview</a>.</p></div></section>
+</main>
+<footer class="site-footer"><div class="wrap">
+<p>Hawkerline is source-available under the Hawkerline Community License. Provided as-is, without warranty.</p>
+<p>Showcase deployment: <a href="https://poxiaoman.com">poxiaoman.com</a> · <a href="https://github.com/shuaige121/hawkerline">github.com/shuaige121/hawkerline</a> · <a href="llms.txt">llms.txt</a></p>
+</div></footer>
+</body>
+</html>

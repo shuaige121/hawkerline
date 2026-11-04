@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>案例：坡晓馒 PO XIAO MAN 与 Hawkerline</title>
+<meta name="description" content="新加坡包点店坡晓馒 PO XIAO MAN 的在线点餐、店主后台、POS 与厨房，运行在 Hawkerline 的来源系统上，使用 Cloudflare Workers 与 D1。">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="{{ORIGIN}}/zh/showcase/poxiaoman.html">
+<link rel="alternate" hreflang="en" href="{{ORIGIN}}/showcase/poxiaoman.html">
+<link rel="alternate" hreflang="zh" href="{{ORIGIN}}/zh/showcase/poxiaoman.html">
+<link rel="alternate" hreflang="x-default" href="{{ORIGIN}}/showcase/poxiaoman.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hawkerline">
+<meta property="og:title" content="案例：坡晓馒 PO XIAO MAN 与 Hawkerline">
+<meta property="og:description" content="新加坡包点店坡晓馒 PO XIAO MAN 的在线点餐、店主后台、POS 与厨房，运行在 Hawkerline 的来源系统上，使用 Cloudflare Workers 与 D1。">
+<meta property="og:url" content="{{ORIGIN}}/zh/showcase/poxiaoman.html">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_SG">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="案例：坡晓馒 PO XIAO MAN 与 Hawkerline">
+<meta name="twitter:description" content="新加坡包点店坡晓馒 PO XIAO MAN 的在线点餐、店主后台、POS 与厨房，运行在 Hawkerline 的来源系统上，使用 Cloudflare Workers 与 D1。">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Hawkerline","description":"Hawkerline 是一套 AI 智能体可以直接操作的餐饮点餐、厨房看板、菜单与收银系统，源码公开，面向新加坡餐饮商户，运行在一个 Cloudflare Worker 和一个 D1 数据库上。","applicationCategory":"BusinessApplication","operatingSystem":"Cloudflare Workers","url":"{{ORIGIN}}/zh/","license":"{{ORIGIN}}/zh/license.html","inLanguage":"zh","sameAs":["https://github.com/shuaige121/hawkerline"]}</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="site-header"><div class="wrap bar">
+<a class="brand" href="../../zh/index.html"><svg class="logo" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="var(--accent)"/><path d="M9 19h14a7 7 0 0 1-14 0z" fill="var(--on-accent)"/><path d="M12 8c-1.5 1.7 1.5 2.7 0 4.5M17 8c-1.5 1.7 1.5 2.7 0 4.5M22 8c-1.5 1.7 1.5 2.7 0 4.5" fill="none" stroke="var(--on-accent)" stroke-width="1.6" stroke-linecap="round"/></svg><span>Hawkerline</span></a>
+<nav aria-label="Primary"><a href="../../zh/index.html">首页</a><a href="../../zh/agents.html">AI 智能体</a><a href="../../zh/license.html">许可</a><a href="../../zh/showcase/poxiaoman.html" aria-current="page">案例</a><a href="https://github.com/shuaige121/hawkerline">GitHub</a><a class="lang" href="../../showcase/poxiaoman.html" hreflang="en" lang="en" aria-label="切换到英文">English</a></nav>
+</div></header>
+<main id="main">
+
+<section class="hero"><div class="wrap">
+<p class="eyebrow">案例部署</p>
+<h1>坡晓馒 PO XIAO MAN</h1>
+<p class="lede">坡晓馒 PO XIAO MAN 是新加坡的一家包点店。Hawkerline 由支撑其在线点餐的生产系统抽取而成。</p>
+<p class="cta"><a class="btn primary" href="https://poxiaoman.com">访问 poxiaoman.com</a></p>
+</div></section>
+<section class="section " id="what"><div class="wrap"><h2>系统上运行着什么</h2><ul><li>在线点餐页、店主后台、POS 与厨房，均运行在 Hawkerline 的来源系统上。</li><li>使用 Cloudflare Workers 与 D1。</li><li>接受 Stripe 实时支付。</li><li>中英双语菜单，包含套餐、家庭囤货装与饮品。</li><li>点餐页在 poxiaoman.com；后台、POS 与厨房使用同一个 Worker 的各自子域名。</li></ul></div></section>
+<section class="section alt" id="shots"><div class="wrap"><h2>点餐页</h2><div class="shots"><img src="../../assets/poxiaoman-storefront-desktop.webp" width="1100" height="688" alt="坡晓馒 poxiaoman.com 公开点餐页的桌面视图，显示菜单分类与套餐商品卡片" loading="lazy"><img class="mob" src="../../assets/poxiaoman-storefront-mobile.webp" width="390" height="844" alt="坡晓馒 poxiaoman.com 公开点餐页的手机视图" loading="lazy"></div>
+<p class="cap">坡晓馒 poxiaoman.com 公开点餐页截图。</p></div></section>
+<section class="section " id="why"><div class="wrap"><h2>为什么这对 Hawkerline 重要</h2><p>Hawkerline 是一套 AI 智能体可以直接操作的餐饮点餐、厨房看板、菜单与收银系统，源码公开，面向新加坡餐饮商户，运行在一个 Cloudflare Worker 和一个 D1 数据库上。这个案例就是参照：Hawkerline 不是为演示而写的原型，而是从一个服务真实门店的系统中抽取出来的代码。</p><p><a href="../../zh/index.html">返回概览</a> · <a href="../../zh/agents.html">智能体接口</a> · <a href="../../zh/license.html">许可</a></p></div></section>
+</main>
+<footer class="site-footer"><div class="wrap">
+<p>Hawkerline 在 Hawkerline Community License 下源码公开，按现状提供，不附带担保。</p>
+<p>案例部署：<a href="https://poxiaoman.com">poxiaoman.com</a> · <a href="https://github.com/shuaige121/hawkerline">github.com/shuaige121/hawkerline</a> · <a href="../../llms.txt">llms.txt</a></p>
+</div></footer>
+</body>
+</html>

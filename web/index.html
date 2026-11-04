@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>在线下单 · Order online</title>
+<link rel="icon" href="/img/logo.svg">
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+<script defer src="/vendor/leaflet/leaflet.js"></script>
+<link rel="stylesheet" href="/storefront.css">
+</head>
+<body>
+<a id="helpFab" class="help-fab" href="#" target="_blank" rel="noopener" style="display:none">WhatsApp</a>
+<header>
+  <img src="/img/logo.svg" alt="">
+  <div style="flex:1"><div class="b"></div><div class="s" id="subtitle"></div></div>
+  <button id="langBtn" onclick="setLang(L==='cn'?'en':'cn')" style="background:transparent;color:var(--on-primary,#F4E7C8);border:1px solid var(--on-primary,#F4E7C8);border-radius:18px;padding:10px 14px;font-weight:700;font-size:13px;margin-right:8px">EN</button>
+  <button id="memberBtn" style="background:var(--gold2);color:var(--green-text,var(--green));border:none;border-radius:18px;padding:10px 16px;font-weight:700;font-size:13px">会员</button>
+</header>
+
+<div id="closedBanner"></div>
+<div id="posterRail" class="poster-rail" style="display:none"></div>
+<div id="orderProgress"></div>
+<div id="routeBanner"></div>
+<div id="deliveryInfo"></div>
+<div id="topupPromo"></div>
+<div id="pickupHome"></div>
+<main id="menu"><p class="muted" style="padding:20px">加载菜单中…</p></main>
+
+<div class="bar">
+  <div class="t"><span id="totalLabel">合计</span> <b id="total">S$ 0.00</b> <span class="muted" id="count">0 件</span></div>
+  <button id="checkout" disabled>去结算</button>
+</div>
+
+<div class="sheet" id="sheet"><div class="panel" id="sheetBody"></div></div>
+<div class="sheet" id="memberSheet"><div class="panel" id="memberBody"></div></div>
+<div class="sheet" id="wxSheet"><div class="panel" id="wxBody"></div></div>
+<div id="posterModal" class="poster-modal" aria-hidden="true"><div id="posterDialog" class="poster-dialog" role="dialog" aria-modal="true" aria-labelledby="posterDialogTitle"></div></div>
+<div id="posterToast" class="poster-toast" role="status" aria-live="polite"></div>
+
+<script defer src="/storefront.js"></script>
+<footer style="text-align:center;padding:20px 16px 32px;font-size:12px;color:#6E6650;border-top:1px solid #E4D9BE;background:#F6EFE0;margin-top:24px">
+  <a href="/privacy" style="color:#1C4A3A;font-weight:700;text-decoration:none">隐私政策 Privacy</a>
+  &nbsp;·&nbsp;
+  <a href="/terms" style="color:#1C4A3A;font-weight:700;text-decoration:none">条款 Terms</a>
+  &nbsp;·&nbsp;
+  <a href="/about" style="color:#1C4A3A;font-weight:700;text-decoration:none">关于我们 About Us</a><br>
+  <a id="footerWa" href="#" target="_blank" rel="noopener" style="color:#1C4A3A;font-weight:700;text-decoration:none;display:none">WhatsApp</a>
+  &nbsp;·&nbsp;
+  <a id="footerTel" href="#" style="color:#1C4A3A;font-weight:700;text-decoration:none;display:none">一键拨号 Call</a><br>
+  <span id="footerBrand" style="opacity:.8"></span>
+</footer>
+</body>
+</html>

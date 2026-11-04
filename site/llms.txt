@@ -1,0 +1,28 @@
+# Hawkerline
+
+> Hawkerline is a source-available restaurant ordering, kitchen display, menu and POS system that an AI agent can operate, built for Singapore food businesses and running on one Cloudflare Worker and one D1 database.
+
+Hawkerline is source-available under the Hawkerline Community License (not OSI open source). It is free for a food and beverage business to run for its own outlets when the business and its affiliates had annual revenue of not more than S$10,000,000 in the previous financial year. It was extracted from the production system of 坡晓馒 PO XIAO MAN, a Singapore bun shop.
+
+## Docs
+
+- [Overview]({{ORIGIN}}/): what Hawkerline is, the four surfaces, safety rails, deployment model, FAQ
+- [Agent interface]({{ORIGIN}}/agents.html): MCP at /mcp, REST at /api/agent/v1, OpenAPI 3.1 at /api/agent/v1/openapi.json, /llms.txt, scopes, tool list, example client configuration
+- [License]({{ORIGIN}}/license.html): plain-language summary of the Hawkerline Community License and FAQ
+- [Showcase: 坡晓馒 PO XIAO MAN]({{ORIGIN}}/showcase/poxiaoman.html): the production deployment Hawkerline was extracted from
+
+## Chinese
+
+- [中文首页]({{ORIGIN}}/zh/)
+- [智能体接口]({{ORIGIN}}/zh/agents.html)
+- [许可说明]({{ORIGIN}}/zh/license.html)
+- [案例：坡晓馒]({{ORIGIN}}/zh/showcase/poxiaoman.html)
+
+## Source and full text
+
+- [GitHub repository](https://github.com/shuaige121/hawkerline)
+- [Full text for LLMs]({{ORIGIN}}/llms-full.txt)
+
+## Optional
+
+- [Showcase storefront](https://poxiaoman.com)

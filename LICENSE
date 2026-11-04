@@ -1,0 +1,120 @@
+Hawkerline Community License 1.0
+
+Copyright (c) 2026 Leonard Chow Yi Ding
+
+This is a source-available license. It is not an open source license approved by the Open Source Initiative.
+In short: food and beverage businesses with annual revenue of up to S$10,000,000 may use the software for
+their own outlets free of charge; system vendors, resellers and hosting providers may not commercialise it
+without a separate commercial license. The full terms below are what apply.
+
+1. Definitions
+
+"Licensor" means Leonard Chow Yi Ding.
+
+"Software" means the Hawkerline source code, documentation and other files distributed with this license,
+and any modified version of them.
+
+"You" means the individual or legal entity exercising rights under this license. "Your Affiliates" means any
+entity that controls, is controlled by, or is under common control with You, where "control" means owning
+more than 50% of the voting interests or having the power to direct management.
+
+"Annual Revenue" means the total gross revenue of You and Your Affiliates combined, from all sources, for the
+most recently completed financial year, converted into Singapore dollars at a reasonable prevailing rate.
+If You have not yet completed a financial year, Annual Revenue means Your reasonably projected gross revenue
+for Your first financial year.
+
+"Eligible Merchant" means a business that operates restaurants, cafés, food stalls, kiosks, bakeries,
+take-away or delivery kitchens or other food and beverage outlets, and whose Annual Revenue is not more than
+S$10,000,000 (ten million Singapore dollars).
+
+"Own Use" means using the Software to run the Eligible Merchant's own outlets and brands, including taking
+orders and payments from that merchant's own customers, running its kitchen, point of sale, menu and staff
+functions, and connecting the merchant's own AI agents and tools to it.
+
+"Commercial Provider" means anyone who offers software, systems or services to other businesses, including
+POS, ordering or restaurant-software vendors, SaaS and hosting providers, resellers, distributors, agencies,
+system integrators and franchisors acting for their franchisees.
+
+2. Free use by Eligible Merchants
+
+Subject to this license, the Licensor grants an Eligible Merchant a worldwide, non-exclusive, royalty-free,
+non-transferable license to use, copy, modify, install, deploy and self-host the Software for its Own Use,
+on infrastructure it controls or that is provided to it in its own name.
+
+3. Contractors working for an Eligible Merchant
+
+An Eligible Merchant may engage employees, freelancers or contractors to install, configure, modify, operate
+and maintain the Software for that merchant's Own Use. Such persons may charge the merchant for their time
+and work. They may not, under this license, sell, license, rent or otherwise charge for the Software itself,
+or run one deployment of the Software for more than one unrelated business. Operating one Eligible
+Merchant's own deployment in this way is not a hosted or managed service under section 5(b); offering such
+work as a standard product or package to many businesses is.
+
+4. Non-commercial use
+
+Anyone may use, copy and modify the Software for personal use, evaluation, testing, research, teaching and
+learning, and for use by non-profit organisations, as long as that use is not for the commercial advantage
+of a Commercial Provider.
+
+5. What requires a separate commercial license
+
+The following are not permitted under this license and require a written commercial license from the
+Licensor:
+
+  (a) selling, reselling, licensing, sublicensing, renting, leasing or otherwise charging for the Software or
+      any modified version of it;
+  (b) offering the Software, or functionality substantially derived from it, to third parties as a hosted,
+      managed, multi-tenant, white-label or software-as-a-service product;
+  (c) bundling, embedding or pre-installing the Software in a product, device or service that is sold or
+      provided by a Commercial Provider to other businesses;
+  (d) use of the Software by or for a business whose Annual Revenue is more than S$10,000,000, other than
+      the non-commercial uses in section 4 and the transition period in section 6.
+
+6. Growing above the threshold
+
+If You were an Eligible Merchant and Your Annual Revenue later exceeds S$10,000,000, You may continue to use
+the Software under this license for 90 days after the end of the financial year in which the threshold was
+exceeded. To continue after that period You need a commercial license.
+
+7. Sharing copies and modifications
+
+You may share copies of the Software, with or without modifications, only under this same license, with
+this license text and all copyright notices included, and without charging for the Software itself. You
+must mark modified files so that others can tell they were changed. You may not remove or alter this
+license or any copyright, attribution or license notices in the Software.
+
+8. Patents
+
+The Licensor grants You a license under any patent claims the Licensor can license that are necessarily
+infringed by the Software, only for the uses this license permits. If You bring a patent claim alleging that
+the Software infringes a patent, every license You have under this license ends immediately.
+
+9. Names and trademarks
+
+This license does not grant any right to use the name "Hawkerline", the Licensor's name, or any logo, except
+to state truthfully that a deployment or modified version is based on the Software.
+
+10. Termination
+
+If You use the Software in a way this license does not permit, Your rights under this license end
+automatically. If the Licensor notifies You of a first violation and You stop the violation within 30 days
+of the notice, Your license is reinstated. Rights of people who received copies from You are not affected
+as long as they comply with this license.
+
+11. No warranty and limitation of liability
+
+The Software is provided "as is", without warranty of any kind, express or implied, including warranties of
+merchantability, fitness for a particular purpose and non-infringement. You are responsible for how You
+operate it, including payments, refunds, taxes, data protection and food-safety obligations. To the maximum
+extent permitted by law, the Licensor is not liable for any claim, damages or other liability, whether in
+contract, tort or otherwise, arising from or in connection with the Software or its use.
+
+12. Third-party components
+
+Third-party components included with the Software, listed in THIRD_PARTY_NOTICES.md, are licensed under their
+own terms and not under this license.
+
+13. Commercial licenses
+
+For a commercial license, or if You are unsure whether Your use is permitted, open an issue in the
+Software's source repository to contact the Licensor.

@@ -1,0 +1,426 @@
+{
+ "_fixture": "TEST FIXTURE ONLY - not live data. Copied from public catalog release 289f71aa (published 2026-08-30); images remapped to bundled /img assets; business hours removed.",
+ "schema_version": 1,
+ "settings": {
+  "SHOP_POSTAL": "100003",
+  "brand_color_accent": "#A23B2D",
+  "brand_color_bg": "#F6EFE0",
+  "brand_color_primary": "#1C4A3A",
+  "brand_color_secondary": "#B98A2F",
+  "brand_name_cn": "",
+  "brand_name_en": "",
+  "brand_slogan_cn": "精选食材 每日手工现做 东方优质碳水品牌",
+  "brand_slogan_en": "Healthy Carbs，Anytime",
+  "delivery_areas": "【全岛有计划预订送排班表】 🌟 核心大本营圈（邮编 56/57/31/32/33/53/54/55/28/29/30）：周二至周日天天可送（满100免邮，不满收10）。 🚚 偏远外围圈（必须按以下专属配送日预订）： 每周二：西部片区（邮编 60/61/62/64/12/05/11） 每周三：东部片区（邮编 46/47/48/51/52/81/82） 每周四：北部/西北片区（邮编 73/75/76/65/67/68） 每周五：中南/沿海片区（邮编 01/02/03/04/06/07/08/09/10/14/15/16） 💰 外围圈福利：满200全岛免邮！满100运费仅10！未满100无法走预订送，请选【自费随时送】。",
+  "delivery_enabled": "1",
+  "delivery_fee": "10",
+  "delivery_free_above": "200",
+  "delivery_min": "100",
+  "delivery_note": "【预订配送时效与规则】 每日 16:00 截止次日预订。 常规计划配送时间为 12:00 - 19:00，因司机需根据最优路线集约顺路派送，恕无法指定精准送达时间段。 当天急单或特快直达：请在下单时切换为【自费随时送】模式，运费由第三方 API 实时测算且全额自理。",
+  "gst_rate": "9",
+  "gst_registered": "0",
+  "pickup_enabled": "1",
+  "prep_time_min": "30",
+  "refund_max_days": "0",
+  "service_charge_enabled": "0",
+  "service_charge_rate": "10",
+  "shop_address": "Example Food Court #01-01, S(100003)",
+  "shop_contact_phone": "6580000000",
+  "shop_name": "Example Food Court",
+  "shop_pickup_detail": "红色 Example Food Court 招牌入口，从玻璃门进入；到达后如找不到取餐口，可直接 WhatsApp 或拨打电话。",
+  "shop_pickup_photo": "/img/pickup-example.jpg",
+  "delivery": {
+   "same_day_cutoff": "16:00",
+   "anytime": {
+    "fee": 0,
+    "note": "自费随时送 · 运费另算（下单后单独报）"
+   },
+   "zones": [
+    {
+     "id": "core",
+     "name_cn": "核心大本营",
+     "name_en": "Core (Mon–Fri)",
+     "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "sectors": [
+      "28",
+      "29",
+      "31",
+      "32",
+      "33",
+      "56",
+      "57"
+     ],
+     "free_over": 100,
+     "fee": 10,
+     "block_below": 0
+    },
+    {
+     "id": "west",
+     "name_cn": "西部片区",
+     "name_en": "West (Tue)",
+     "weekdays": [
+      2
+     ],
+     "sectors": [
+      "05",
+      "11",
+      "12",
+      "60",
+      "61",
+      "62",
+      "64"
+     ],
+     "free_over": 200,
+     "fee": 10,
+     "block_below": 100
+    },
+    {
+     "id": "east",
+     "name_cn": "东部/东北片区",
+     "name_en": "East/NE (Wed)",
+     "weekdays": [
+      3
+     ],
+     "sectors": [
+      "30",
+      "46",
+      "47",
+      "48",
+      "51",
+      "52",
+      "53",
+      "54",
+      "55",
+      "81",
+      "82"
+     ],
+     "free_over": 200,
+     "fee": 10,
+     "block_below": 100
+    },
+    {
+     "id": "north",
+     "name_cn": "北部/西北片区",
+     "name_en": "North/NW (Thu)",
+     "weekdays": [
+      4
+     ],
+     "sectors": [
+      "65",
+      "67",
+      "68",
+      "73",
+      "75",
+      "76"
+     ],
+     "free_over": 200,
+     "fee": 10,
+     "block_below": 100
+    },
+    {
+     "id": "south",
+     "name_cn": "中南/沿海片区",
+     "name_en": "Central-S (Fri)",
+     "weekdays": [
+      5
+     ],
+     "sectors": [
+      "01",
+      "02",
+      "03",
+      "04",
+      "06",
+      "07",
+      "08",
+      "10",
+      "14",
+      "15",
+      "16"
+     ],
+     "free_over": 200,
+     "fee": 10,
+     "block_below": 100
+    }
+   ]
+  },
+  "topup_tiers": [
+   [
+    500,
+    80
+   ],
+   [
+    300,
+    40
+   ],
+   [
+    200,
+    20
+   ],
+   [
+    100,
+    8
+   ]
+  ],
+  "pickup_display": [
+   {
+    "id": "main",
+    "built_in": true,
+    "active": 1,
+    "name": "Example Food Court",
+    "name_en": "",
+    "address": "Example Food Court #01-01, S(100003)",
+    "address_en": "",
+    "postal": "100003",
+    "detail": "红色 Example Food Court 招牌入口，从玻璃门进入；到达后如找不到取餐口，可直接 WhatsApp 或拨打电话。",
+    "detail_en": "",
+    "photo": "/img/pickup-example.jpg",
+    "sort": 0
+   },
+   {
+    "id": "riverside",
+    "active": 1,
+    "name": "Riverside Mall",
+    "name_en": "Riverside Mall",
+    "address": "Riverside Mall, S(100001)",
+    "address_en": "",
+    "postal": "100001",
+    "detail": "默认晚餐前带回",
+    "detail_en": "",
+    "photo": "/public/media/19814f4f8873bb05f8e987c4cca9f37cfba025e1f8e9d888c4f5302085f5e0af",
+    "sort": 0
+   },
+   {
+    "id": "vp",
+    "active": 1,
+    "name": "Garden Plaza",
+    "name_en": "",
+    "address": "100004",
+    "address_en": "",
+    "postal": "100004",
+    "detail": "No.1",
+    "detail_en": "",
+    "photo": "",
+    "sort": 10
+   }
+  ]
+ },
+ "products": [
+  {
+   "sku": "S01",
+   "slug": "s01",
+   "name_cn": "鲜肉包",
+   "name_en": "Pork Bun",
+   "price_cents": 360,
+   "category": "protein",
+   "kcal": 260,
+   "image_url": "/img/01.png",
+   "description_cn": "经典鲜肉爆汁款，约260kcal，蛋白质13g。",
+   "description_en": "Classic juicy pork bun, about 260kcal with 13g protein.",
+   "detail_cn": "鲜肉包×1。经典老馅，日常高蛋白主食选择；约260kcal，蛋白质13g。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Signature juicy pork bun x1. A classic protein-forward staple, about 260kcal and 13g protein. Reheat on high microwave for about 25 seconds, or steam for about 5 minutes after water boils.",
+   "active": 1,
+   "sort": 1,
+   "tags": []
+  },
+  {
+   "sku": "S03",
+   "slug": "s03",
+   "name_cn": "酱肉包",
+   "name_en": "Braised Pork Bun",
+   "price_cents": 450,
+   "category": "protein",
+   "kcal": 320,
+   "image_url": "/img/03.png",
+   "description_cn": "颗粒感十足的酱肉包，约320kcal，蛋白质15g。",
+   "description_en": "Nanyang braised pork bun with hearty texture, about 320kcal and 15g protein.",
+   "detail_cn": "酱肉包×1。颗粒感十足，南洋风味酱香浓郁；约320kcal，蛋白质15g。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Nanyang braised pork bun x1. Rich savory-sweet Nanyang-style filling with a hearty bite, about 320kcal and 15g protein. Reheat by microwave or steam.",
+   "active": 1,
+   "sort": 3,
+   "tags": []
+  },
+  {
+   "sku": "S06",
+   "slug": "s06",
+   "name_cn": "茄子包",
+   "name_en": "Eggplant Bun",
+   "price_cents": 320,
+   "category": "lowcal",
+   "kcal": 190,
+   "image_url": "/img/06.png",
+   "description_cn": "少油低盐茄子包，约190kcal，膳食纤维4g。",
+   "description_en": "Low-oil, lower-salt eggplant bun, about 190kcal with 4g fiber.",
+   "detail_cn": "茄子包×1。少油低盐，低卡高纤；约190kcal，膳食纤维4g。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Eggplant bun x1. Lower oil and lower salt, a lighter high-fiber choice, about 190kcal and 4g fiber. Reheat by microwave or steam.",
+   "active": 1,
+   "sort": 6,
+   "tags": []
+  },
+  {
+   "sku": "S07",
+   "slug": "s07",
+   "name_cn": "青菜香菇包",
+   "name_en": "Vegetable & Mushroom Bun",
+   "price_cents": 320,
+   "category": "lowcal",
+   "kcal": 180,
+   "image_url": "/img/07.png",
+   "description_cn": "青菜香菇包，价格破冰款，约180kcal，膳食纤维3.5g。",
+   "description_en": "Fresh veg and shiitake bun, about 180kcal with 3.5g fiber.",
+   "detail_cn": "青菜香菇包×1。清爽蔬菜口味，价格破冰款；约180kcal，膳食纤维3.5g。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Fresh veg and shiitake bun x1. A clean, light vegetable option, about 180kcal and 3.5g fiber. Reheat by microwave or steam.",
+   "active": 1,
+   "sort": 7,
+   "tags": []
+  },
+  {
+   "sku": "S09",
+   "slug": "s09",
+   "name_cn": "豆沙包",
+   "name_en": "Red Bean Bun",
+   "price_cents": 280,
+   "category": "tea",
+   "kcal": 210,
+   "image_url": "/img/09.png",
+   "description_cn": "豆沙包，素食下午茶，约210kcal。",
+   "description_en": "Pandan red bean bun, vegetarian tea-time pick, about 210kcal.",
+   "detail_cn": "豆沙包×1（素）。斑斓香气配豆沙甜馅；约210kcal。适合作为中式下午茶或轻甜点。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Pandan red bean bun x1, vegetarian. Pandan aroma with red bean paste, about 210kcal. Good for Chinese-style tea time. Reheat by microwave or steam.",
+   "active": 1,
+   "sort": 9,
+   "tags": []
+  },
+  {
+   "sku": "S13",
+   "slug": "s13",
+   "name_cn": "葱油花卷",
+   "name_en": "Spring Onion Roll",
+   "price_cents": 200,
+   "category": "tea",
+   "kcal": 170,
+   "image_url": "/img/13.png",
+   "description_cn": "葱油花卷，素食下午茶，约170kcal。",
+   "description_en": "Spring onion flower roll, vegetarian, about 170kcal.",
+   "detail_cn": "葱油花卷×1（素）。葱香咸口，约170kcal。适合配餐或下午茶。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Spring onion flower roll x1, vegetarian. Savory scallion aroma, about 170kcal. Reheat by microwave or steam.",
+   "active": 1,
+   "sort": 13,
+   "tags": []
+  },
+  {
+   "sku": "C1",
+   "slug": "c1",
+   "name_cn": "均衡套餐(肉菜混合四粒）",
+   "name_en": "Balanced Set",
+   "price_cents": 1280,
+   "category": "combo",
+   "kcal": 720,
+   "image_url": "/img/C1.png",
+   "description_cn": "肉菜混合四粒，鲜肉、古法炒酱肉与双素高纤搭配，日常均衡主食盒。",
+   "description_en": "Four-piece balanced box with juicy pork, traditional stir-fried sauced pork, and two high-fiber vegetable buns.",
+   "detail_cn": "内含：鲜肉包×1、炒酱肉包×1、茄子包×1、青菜香菇包×1。约720kcal。适合想一次吃到肉类与蔬菜纤维的人。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Includes: juicy pork bun x1, traditional stir-fried sauced pork bun x1, eggplant bun x1, fresh veg and shiitake bun x1. About 720kcal. A balanced meat-and-veg everyday box. Reheat by microwave or steam.",
+   "active": 1,
+   "sort": 14,
+   "tags": []
+  },
+  {
+   "sku": "C2",
+   "slug": "c2",
+   "name_cn": "荤食套餐（纯肉四粒）",
+   "name_en": "Meat Lover Set",
+   "price_cents": 1580,
+   "category": "combo",
+   "kcal": 920,
+   "image_url": "/img/C2.png",
+   "description_cn": "纯肉四粒，荤食套餐，适合想吃扎实肉馅的人。",
+   "description_en": "Four-piece high-protein meat set for a hearty meal.",
+   "detail_cn": "内含：牛肉包×1、酱肉包×1、鲜肉包×1、梅干菜肉包×1。约920kcal。四款肉包一次配齐，适合高能量、高蛋白需求。微波炉高火约25秒，或隔水蒸/蒸锅上汽复蒸约5分钟。",
+   "detail_en": "Includes: juicy beef bun x1, Nanyang braised pork bun x1, juicy pork bun x1, spicy preserved-veg pork bun x1. About 920kcal. A hearty four-meat high-protein set. Reheat by microwave or steam.",
+   "active": 1,
+   "sort": 15,
+   "tags": []
+  },
+  {
+   "sku": "F8",
+   "slug": "f8",
+   "name_cn": "家庭装（大）（18粒）",
+   "name_en": "Family Box L",
+   "price_cents": 5080,
+   "category": "family",
+   "kcal": 3150,
+   "image_url": "/img/F8.png",
+   "description_cn": "18粒回货皇，9枚荤大包、6枚素高纤、3枚下午茶赠品。",
+   "description_en": "18-piece family stock-up box with meat, high-fiber veg, and tea-time bonus picks.",
+   "detail_cn": "家庭装（大）（18枚回货皇）。9枚荤大包：爆汁鲜肉×3、爆汁牛肉×2、南洋酱肉×2、辣味梅干菜×2；6枚素高纤：翡翠青菜×3、茄子包×2、麻辣豆腐包×1；3枚赠品款：限时直接加赠南洋下午茶轻食组（随机选3，价值高达S$7.60）。约3150kcal。",
+   "detail_en": "Family Box L, 18 pieces. Meat buns: juicy pork x3, juicy beef x2, Nanyang braised pork x2, spicy preserved-veg pork x2. High-fiber veg: fresh veg x3, eggplant x2, mala tofu x1. Bonus: three Nanyang tea-time picks selected at random for a limited time, value up to S$7.60. About 3150kcal.",
+   "active": 1,
+   "sort": 21,
+   "tags": []
+  },
+  {
+   "sku": "MB4",
+   "slug": "mb4",
+   "name_cn": "湖南黑猪肉香菇糯米烧卖（3粒）",
+   "name_en": "Hu Nan Black Pork & Mushroom Glutinous Rice Shaomai (3 pcs)",
+   "price_cents": 680,
+   "category": "protein",
+   "kcal": null,
+   "image_url": "/img/MB4.jpg",
+   "description_cn": "严选湖南新鲜黑猪肉，搭配浓香花菇与软糯糯米。老面皮包裹，一口咬下满口鲜香，软糯弹牙！【3粒入】",
+   "description_en": "[3 pcs per portion] Crafted with premium Hunan fresh black pork, aromatic shiitake mushrooms, and soft glutinous rice. Delightfully chewy, savory, and cooked to perfection!",
+   "detail_cn": "老面皮包裹，一口咬下满口鲜香，软糯弹牙！【3粒入】",
+   "detail_en": "Crafted with premium Hunan fresh black pork, aromatic shiitake mushrooms, and soft glutinous rice. Delightfully chewy, savory, and cooked to perfection!",
+   "active": 1,
+   "sort": 23,
+   "tags": []
+  },
+  {
+   "sku": "MB6",
+   "slug": "mb6",
+   "name_cn": "6个神秘盲盒 全家福盲盒",
+   "name_en": "Family Mystery Box (6 pcs)",
+   "price_cents": 1980,
+   "category": "family",
+   "kcal": null,
+   "image_url": "/img/MB6.jpg",
+   "description_cn": "6个神秘盲盒，全家福随机精选；适合犹豫不决和分享。",
+   "description_en": "6-piece family mystery box with selected surprise picks.",
+   "detail_cn": "6个神秘盲盒全家福。犹豫不决时让我们给你一个惊喜；包含6个精选包点，以当天库存与出餐搭配为准，适合家庭分享或第一次尝试。",
+   "detail_en": "Family Mystery Box, 6 pieces. A surprise selection for sharing or first-time tasting. Includes six selected buns based on daily availability.",
+   "active": 1,
+   "sort": 24,
+   "tags": []
+  }
+ ],
+ "offers": [
+  {
+   "id": "first-order-new80",
+   "title_cn": "首单立减 20%",
+   "title_en": "20% OFF your first order",
+   "body_cn": "登录会员，优惠码已为你准备好。自取、拼单和随时送均可使用。",
+   "body_en": "Sign in as a member. Valid for pickup, group delivery and anytime delivery.",
+   "badge": "NEW80",
+   "image_url": "",
+   "action_type": "promo",
+   "action_value": "NEW80",
+   "cta_cn": "一键使用优惠",
+   "cta_en": "Use 20% OFF",
+   "active": 1,
+   "show_on_home": 1,
+   "show_on_open": 1,
+   "sort": 10,
+   "starts": "",
+   "ends": ""
+  }
+ ],
+ "release_id": "fixture-storefront-ux",
+ "checksum": "fixture",
+ "published_at": "2026-08-30T16:05:02.898Z"
+}

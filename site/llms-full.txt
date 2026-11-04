@@ -1,0 +1,163 @@
+# Hawkerline (full text)
+
+> Hawkerline is a source-available restaurant ordering, kitchen display, menu and POS system that an AI agent can operate, built for Singapore food businesses and running on one Cloudflare Worker and one D1 database.
+
+Source: https://github.com/shuaige121/hawkerline
+Site: {{ORIGIN}}/
+Chinese entity sentence: Hawkerline 是一套 AI 智能体可以直接操作的餐饮点餐、厨房看板、菜单与收银系统，源码公开，面向新加坡餐饮商户，运行在一个 Cloudflare Worker 和一个 D1 数据库上。
+
+## What it is
+
+Hawkerline is a source-available restaurant ordering, kitchen display, menu and POS system that an AI agent can operate, built for Singapore food businesses and running on one Cloudflare Worker and one D1 database.
+
+- Runs as one Cloudflare Worker and one Cloudflare D1 (SQLite) database; static files are served by Workers Assets. No separate server to maintain.
+- Singapore-first defaults: Singapore time (SGT), SGD prices, GST and service-charge settings, PayNow QR, Singapore postal-sector delivery zones.
+- Bilingual customer storefront and menu: Chinese and English.
+- Extracted from the production system of a Singapore food business (坡晓馒 PO XIAO MAN).
+
+## Surfaces (same Worker, separated by path or subdomain)
+
+- Customer storefront: menu, product pages (/menu/<slug>), cart, checkout, pickup or delivery, scheduled (pre-order) time slots within business hours, order invoice page.
+- Owner back office /admin: products, prices, images, sort order, combo/set components, tags, homepage posters, promo codes, delivery zones, business hours, GST/service charge, payment settings, members, orders, refunds, sales summary, kitchen-printer settings.
+- POS cashier /pos: cashier login with PIN, counter sales, member lookup, wallet top-up at the counter, staff clock-in/clock-out.
+- Kitchen /kitchen: kitchen board with order status flow new, preparing, ready, done; kitchen ticket printing (Star CloudPRNT endpoint, plus a small print agent for macOS and Windows).
+
+## Menu publishing
+
+- Edits go to a draft. Customers only see a published release.
+- Releases are immutable snapshots; publishing can be immediate or scheduled (Singapore time); a 10-minute signed preview link shows the draft before it goes live; rollback creates a new release from an older one.
+- Concurrent edits are protected by revision checks (compare-and-swap): a stale edit is rejected instead of overwriting.
+- Public menu pages are server-rendered HTML with a short shared cache (60 seconds); sitemap.xml and robots.txt are generated.
+- Combos/sets list their components on the customer menu and on kitchen tickets.
+- CSV export of the menu for delivery-platform listing, with a configurable commission markup on prices.
+
+## Payments, members, promotions, delivery
+
+- Stripe online payments with signed webhooks; Stripe refunds (full order or delivery fee only).
+- PayNow dynamic QR (SGQR / EMVCo payload) for manual-confirmation payment.
+- Member accounts with Google sign-in and Sign in with Apple; guest checkout with a phone number.
+- Stored-value wallet with configurable top-up bonus tiers; member points and tiers.
+- Promo codes with rules such as per-account limits, first-order only, pickup only and batches.
+- Delivery fee by zone, minimum order and free-delivery threshold; courier price quotes from Lalamove (quote only; the system does not book couriers automatically).
+- Telegram new-order alerts to subscribed staff chats.
+
+## AI agent interface
+
+- MCP server at /mcp (Model Context Protocol, Streamable HTTP transport, bearer-key auth). Works with any MCP client that can send an Authorization: Bearer header over Streamable HTTP, for example Claude Code. OAuth is not implemented, so connectors that only support OAuth cannot connect directly. Responses are JSON over POST (no server-sent events); protocol versions 2025-11-25, 2025-06-18, 2025-03-26.
+- REST API at POST /api/agent/v1/tools/<tool> with an OpenAPI 3.1 document at /api/agent/v1/openapi.json.
+- /llms.txt is served by every deployment and explains to an AI agent how to operate the store.
+- Agent API keys (hlk_ followed by 40 hex characters) are created and revoked by the owner in /admin on the AI access page, shown once and stored only as a hash. 120 calls per minute per key. Phone numbers in order data are masked unless include_contact is requested. Scopes: menu:read, menu:write, menu:publish, orders:read, orders:write, store:write, reports:read.
+- Agent tools:
+  - get_store_overview (menu:read): Start here: store name, whether it accepts orders, categories, product counts, live release and current draft revision
+  - list_categories (menu:read): Menu categories (key, Chinese label, English label) and how many draft products use each
+  - list_products (menu:read): All draft products with SGD price, category, components and image status
+  - preview_menu (menu:read): Compare the draft with the live menu and get a 10-minute preview link; returns draft_checksum and live_release_id
+  - set_categories (menu:write): Replace the whole category list; order is display order
+  - upsert_product (menu:write): Create a product or update only the fields you pass, matched by sku
+  - bulk_upsert_products (menu:write): Create or update up to 100 products in one call, such as a whole menu read from a photo or PDF
+  - set_product_availability (menu:write): Put a product on or off sale in the draft
+  - set_product_image (menu:write): Set the product image from an https URL or base64 data (PNG, JPEG or WebP, up to 640 KB)
+  - reorder_products (menu:write): Set the display order by passing skus in order
+  - publish_menu (menu:publish): Publish exactly the previewed draft; needs draft_checksum and live_release_id from preview_menu; optional effective_at_sgt schedules it
+  - list_orders (orders:read): Recent orders; phone numbers are masked unless include_contact is true
+  - get_kitchen_board (orders:read): Today's paid orders that are not done, with set components expanded
+  - advance_order (orders:write): Move a paid order to the next kitchen status, or to a later status with "to"
+  - set_store_open (store:write): Pause or resume new online orders immediately
+  - get_sales_summary (reports:read): Paid orders, revenue (SGD), GST, service charge and top items for a Singapore-time date range
+- Categories are configurable by the owner or an agent: key, Chinese label, English label.
+- Safety rails: an agent can only publish the exact draft it previewed (checksum must match); every agent call is written to an audit log visible to the owner; scopes limit what each key can do; the owner can revoke a key instantly.
+- Typical flow: give an agent a photo or PDF of a menu, it creates the products and categories, previews, publishes; then the same agent can watch orders and move them through the kitchen.
+- Claude Code (replace your-store.example with the store's domain):
+
+```bash
+claude mcp add --transport http my-store https://your-store.example/mcp --header "Authorization: Bearer hlk_…"
+```
+
+- JSON config for MCP clients that can send a bearer header:
+
+```json
+{
+  "mcpServers": {
+    "my-store": {
+      "type": "http",
+      "url": "https://your-store.example/mcp",
+      "headers": { "Authorization": "Bearer hlk_…" }
+    }
+  }
+}
+```
+
+- REST example:
+
+```bash
+curl -s https://your-store.example/api/agent/v1/tools/list_products -H "Authorization: Bearer hlk_…" -H "content-type: application/json" -d '{"only_on_sale":true}'
+```
+
+## Try it locally
+
+npm ci; npm run db:migrate:local; npm run demo:seed; npm run dev. Guides: https://github.com/shuaige121/hawkerline/blob/main/docs/deploy.md and https://github.com/shuaige121/hawkerline/blob/main/docs/agents.md
+
+## License (Hawkerline Community License)
+
+- Source-available, not OSI open source.
+- Free for a food and beverage business to run for its own outlets, if the business together with its affiliates had annual revenue of not more than S$10,000,000 in the previous financial year.
+- Allowed for that business: install, modify, self-host, and have an IT contractor set it up for the business's own use.
+- Not allowed without a separate commercial license: system vendors, POS or SaaS providers, agencies or integrators selling, reselling, sublicensing, hosting it as a service for other businesses, or bundling it into a commercial product.
+- Businesses above S$10,000,000 annual revenue need a commercial license. Contact the licensor, Leonard Chow Yi Ding, by opening an issue at https://github.com/shuaige121/hawkerline/issues. After the threshold is exceeded there are 90 days to obtain a commercial license. Revenue counts the business together with its affiliates. Contractors may be paid to set it up for one eligible merchant but may not sell the software or run one deployment for several businesses. The license file is LICENSE (Hawkerline Community License 1.0): https://github.com/shuaige121/hawkerline/blob/main/LICENSE
+- Personal, evaluation, educational and non-commercial use is allowed.
+- Provided as-is, without warranty.
+
+## Showcase: 坡晓馒 PO XIAO MAN
+
+- 坡晓馒 PO XIAO MAN is a Singapore bun (包点) shop. Website: https://poxiaoman.com
+- Its online ordering storefront, owner back office, POS and kitchen run on the system Hawkerline was extracted from.
+- It runs on Cloudflare Workers and D1 and accepts live Stripe payments.
+- Bilingual Chinese and English menu, with combos, family boxes and drinks.
+
+## FAQ
+
+Q: What is Hawkerline?
+A: Hawkerline is a source-available restaurant ordering, kitchen display, menu and POS system that an AI agent can operate, built for Singapore food businesses and running on one Cloudflare Worker and one D1 database.
+
+Q: Is Hawkerline open source?
+A: Hawkerline is source-available, not OSI open source. The source code is public. A food and beverage business with annual revenue of not more than S$10,000,000 can run it free for its own outlets under the Hawkerline Community License.
+
+Q: Can an AI agent really publish my menu?
+A: Yes, within limits you set. An agent connects through MCP at /mcp or REST at /api/agent/v1 with an agent key. It can only publish the exact draft it previewed, each key carries only the scopes you grant, every call is written to an audit log, and you can revoke a key instantly.
+
+Q: What do I need to run it?
+A: One Cloudflare Worker and one Cloudflare D1 (SQLite) database. Static files are served by Workers Assets. There is no separate server to maintain.
+
+Q: Is it built for Singapore?
+A: Yes. Defaults include Singapore time (SGT), SGD prices, GST and service-charge settings, PayNow QR and Singapore postal-sector delivery zones. The customer storefront and menu are bilingual, Chinese and English.
+
+Q: Can I resell it or host it for other businesses?
+A: No, not under the community license. System vendors, POS or SaaS providers, agencies and integrators need a separate commercial license to sell, resell, sublicense, host it as a service for other businesses, or bundle it into a commercial product.
+
+Q: Is there a live example?
+A: Yes. Hawkerline was extracted from the production system of 坡晓馒 PO XIAO MAN, a Singapore bun shop at poxiaoman.com.
+
+## 中文摘要
+
+Hawkerline 是一套 AI 智能体可以直接操作的餐饮点餐、厨房看板、菜单与收银系统，源码公开，面向新加坡餐饮商户，运行在一个 Cloudflare Worker 和一个 D1 数据库上。
+
+Q: Hawkerline 是什么？
+A: Hawkerline 是一套 AI 智能体可以直接操作的餐饮点餐、厨房看板、菜单与收银系统，源码公开，面向新加坡餐饮商户，运行在一个 Cloudflare Worker 和一个 D1 数据库上。
+
+Q: Hawkerline 是开源软件吗？
+A: Hawkerline 是源码公开，不是 OSI 意义上的开源。源代码公开可读。上一财年年营业额不超过 1,000 万新元的餐饮商户，可依 Hawkerline Community License 免费用于自家门店。
+
+Q: AI 智能体真的能发布我的菜单吗？
+A: 可以，但在你设定的范围内。智能体凭智能体密钥，通过 /mcp（MCP）或 /api/agent/v1（REST）接入。它只能发布自己预览过的那一版草稿；每个密钥只带有你授予的权限；每次调用都写入审计日志；你可以随时吊销密钥。
+
+Q: 运行它需要什么？
+A: 一个 Cloudflare Worker 和一个 Cloudflare D1（SQLite）数据库，静态文件由 Workers Assets 提供，没有需要另外维护的服务器。
+
+Q: 它是为新加坡设计的吗？
+A: 是。默认设置包括新加坡时间（SGT）、新元价格、GST 与服务费设置、PayNow 二维码，以及新加坡邮区的配送区域。顾客点餐页与菜单提供中英双语。
+
+Q: 可以转售或替其他商户托管吗？
+A: 社区许可下不可以。系统商、POS 或 SaaS 服务商、代理商与集成商如要销售、转售、转授权、作为服务替其他商户托管，或将其打包进商业产品，须另行取得商业许可。
+
+Q: 有实际运行的例子吗？
+A: 有。Hawkerline 由新加坡包点店 坡晓馒 PO XIAO MAN（poxiaoman.com）的生产系统抽取而成。

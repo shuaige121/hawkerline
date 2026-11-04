@@ -1,0 +1,24 @@
+.dev.vars
+.env
+.env.*
+!.env.example
+!.env.*.example
+.print-agent.env
+.wrangler/
+node_modules/
+_bak/
+_audit/
+_manual2/
+_qa/
+coverage/
+dist/
+.DS_Store
+*.log
+*.tmp
+.wrangler-dryrun/
+.playwright-cli/
+
+# local QA artefacts and generated site
+site/dist/
+marketing/qa/
+_review/

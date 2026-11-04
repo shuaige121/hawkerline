@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>厨房 Kitchen</title>
+<style>
+  :root{--green:#1C4A3A;--cream:#F6EFE0;--gold:#B98A2F;--red:#A23B2D;--ink:#33301F;--muted:#6E6650;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:system-ui,'Noto Sans CJK SC',sans-serif;background:var(--cream);color:var(--ink);}
+  header{background:var(--green);color:#F4E7C8;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:3}
+  header .t{font-weight:800}
+  header .st{font-size:13px}
+	  .wrap{padding:14px;max-width:1080px;margin:0 auto}
+	  .panel{background:#fff;border:1px solid var(--gold);border-radius:10px;padding:14px;margin-bottom:12px}
+	  .panel h2{font-size:16px;color:var(--green);margin-bottom:8px}
+	  .setup input{width:100%;padding:10px;font-size:15px;border:1px solid var(--gold);border-radius:8px;margin-top:6px}
+  button{padding:10px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700}
+  button.secondary{background:#6E6650}
+  button.gold{background:#B98A2F}
+  button.red{background:#A23B2D}
+  button:disabled{opacity:.45}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:10px}
+	  .mode{border:1px solid #D8B45F;border-radius:8px;padding:10px;background:#FBF7EC}
+	  .mode b{display:block;color:var(--green);font-size:14px;margin-bottom:3px}
+	  .mode p,.muted{color:var(--muted);font-size:12px;line-height:1.55}
+	  .setup-grid{display:grid;grid-template-columns:minmax(300px,1fr) minmax(300px,420px);gap:14px;align-items:start}
+	  .manual{border-left:4px solid var(--gold);padding-left:12px}
+	  .command-box{margin-top:10px}
+	  .command-box textarea{width:100%;min-height:132px;resize:vertical;border:1px solid #D8B45F;border-radius:8px;background:#2B2B26;color:#F6EFE0;padding:10px;font-family:'SF Mono','Menlo',monospace;font-size:11px;line-height:1.45}
+	  .chiprow{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+	  .chiprow button{font-size:12px;padding:8px 10px}
+	  .ticket{background:#fff;border:1px solid var(--gold);border-radius:8px;padding:10px;margin-bottom:10px;white-space:pre-wrap;font-family:'SF Mono','Menlo',monospace;font-size:13px;line-height:1.45;overflow-x:auto}
+  .ticket .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+	  /* 后台出错时必须让厨房一眼看到，不能只改右上角那行小字。 */
+	  .alert{background:#A23B2D;color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:12px;font-size:20px;font-weight:700;line-height:1.4}
+	  .empty{background:#fff;border:1px dashed var(--gold);border-radius:10px;padding:34px 16px;text-align:center;color:var(--muted)}
+	  .empty b{display:block;color:var(--green);font-size:24px;margin-bottom:6px}
+  .warn{background:#fff7df;border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:10px;font-size:12px;line-height:1.55}
+  .ok{color:var(--green);font-weight:700}
+  .bad{color:var(--red);font-weight:700}
+	  label.inline{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:8px}
+	  label.inline input{width:18px;height:18px;margin:0}
+	  #printArea{display:none}
+	  /* ===== 今日看板：为「站在两米外的厨师」设计，不是为看电脑的人设计 =====
+	     字号层级只有一条准则：商品名+数量 > 单号 > 履约方式/时间 > 顾客名。
+	     厨师真正要读的只有「做什么、做几个」，其余都是次要信息。 */
+	  .board-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 2px 10px}
+	  .board-head h2{font-size:27px;color:var(--green);font-weight:900;letter-spacing:.5px}
+	  .board-head .cnt{font-size:20px;font-weight:800;color:var(--muted)}
+	  .board-head .cnt.hot{color:var(--red);margin-left:8px}
+	  .board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:14px}
+	  @media(max-width:920px){.board-grid{grid-template-columns:1fr}}
+	  .kcard{background:#fff;border:2px solid #E2D6B4;border-left:14px solid var(--gold);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+	  .kcard.st-preparing{border-left-color:#1F6FB2}
+	  .kcard.st-ready{border-left-color:#17833C;border-color:#9FD7B3}
+	  .kcard.arrived{box-shadow:0 0 0 4px rgba(162,59,45,.30)}
+	  .khead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 14px;background:#FBF3E0;border-bottom:1px solid #EADFC2}
+	  .st-preparing .khead{background:#E8F1FA;border-bottom-color:#CBDDEF}
+	  .st-ready .khead{background:#E1F5E8;border-bottom-color:#B4E0C4}
+	  .kpill{font-size:19px;font-weight:900;padding:5px 13px;border-radius:999px;background:var(--gold);color:#fff;white-space:nowrap}
+	  .st-preparing .kpill{background:#1F6FB2}
+	  .st-ready .kpill{background:#17833C}
+	  .kinv{font-size:23px;font-weight:900;font-family:'SF Mono','Menlo',monospace;margin-left:auto}
+	  .karrived{font-size:20px;font-weight:900;background:var(--red);color:#fff;padding:5px 12px;border-radius:8px;white-space:nowrap}
+	  .kitems{padding:13px 14px 4px;display:flex;flex-direction:column;gap:9px}
+	  .kitem{display:flex;align-items:center;justify-content:space-between;gap:12px}
+	  /* 套餐成分：比套餐本身小一号并缩进，一眼看得出是从属关系，但站三米外仍读得清 */
+	  .ksub{margin-left:22px;opacity:.9}
+	  .ksub .nm{font-size:.66em}
+	  .ksub .qty{font-size:22px;min-width:60px;padding:0 11px;background:#6b7f5e}
+	  .kitem .nm{font-size:31px;font-weight:800;line-height:1.15}
+	  .kitem .qty{font-size:34px;font-weight:900;color:#fff;background:var(--green);border-radius:10px;padding:1px 15px;min-width:78px;text-align:center;white-space:nowrap;line-height:1.25}
+	  .kmeta{padding:6px 14px 2px;font-size:20px;font-weight:800;color:var(--green);display:flex;flex-wrap:wrap;gap:4px 18px}
+	  .kcust{padding:6px 14px 0;font-size:13px;color:var(--muted)}
+	  .knote{margin:10px 14px 0;padding:8px 10px;background:#FFF2EF;border:1px solid #E8B6AE;border-radius:8px;font-size:18px;font-weight:700;color:var(--red);line-height:1.4}
+	  .kacts{display:flex;gap:10px;padding:12px 14px 14px;margin-top:auto;flex-wrap:wrap}
+	  .kbtn{flex:1 1 180px;min-height:68px;font-size:22px;font-weight:900;border-radius:12px;padding:10px 12px;line-height:1.2}
+	  .kbtn.go{background:#17833C}
+	  .kbtn.next{background:var(--gold)}
+	  .kflash{animation:kflash 1.8s ease-out 1}
+	  @keyframes kflash{0%{box-shadow:0 0 0 8px rgba(23,131,60,.6)}100%{box-shadow:0 0 0 0 rgba(23,131,60,0)}}
+	  /* 提示条走底部：顶部会盖住「今日看板」标题和第一张卡的单号。 */
+	  .ktoast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:20;background:#17833C;color:#fff;font-size:22px;font-weight:900;padding:14px 26px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.30);max-width:92vw;text-align:center}
+	  .ktoast.warn{background:var(--gold)}
+	  .ktoast.bad{background:var(--red)}
+	  .empty.big{padding:46px 16px;font-size:20px}
+	  .empty.big b{font-size:34px;margin-bottom:10px}
+	  .sechead{font-size:17px;font-weight:800;color:var(--muted);margin:22px 2px 9px;letter-spacing:.5px}
+	  /* 运行状态压成一条：它每多占 100px，看板首屏就少露一张卡片。 */
+	  .rtbar{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;padding:9px 12px;margin-top:16px}
+	  .rtbar .rtlabel{font-size:14px;font-weight:800;color:var(--green)}
+	  .rtbar .muted{font-size:13px}
+	  .rtbar .rtbtns{margin-top:0;margin-left:auto;gap:6px}
+	  .rtbar .rtbtns button{padding:7px 11px;font-size:13px}
+	  @media(max-width:840px){.setup-grid{grid-template-columns:1fr}.manual{border-left:none;border-top:4px solid var(--gold);padding-left:0;padding-top:12px}}
+  @media print{
+    body *{visibility:hidden}
+    #printArea,#printArea *{visibility:visible}
+    #printArea{display:block;position:absolute;left:0;top:0;width:var(--paper-width,72mm);white-space:pre-wrap;font-family:'SF Mono',monospace;font-size:var(--print-font,12px);line-height:var(--print-line,1.45);color:#000}
+  }
+</style></head>
+<body>
+<header><span class="t">厨房 Kitchen</span><span class="st" id="status">未连接</span></header>
+<div class="wrap">
+	  <div class="panel setup" id="setup">
+	    <div class="setup-grid">
+	    <div>
+	      <h2>厨房登录</h2>
+	      <div class="muted">输入厨房密码即可开始接单打印。厨房专用电脑登录一次后会自动记住。</div>
+	      <input id="kitchenPw" type="password" autocomplete="current-password" placeholder="厨房密码">
+	      <details style="margin-top:8px">
+	        <summary class="muted" style="cursor:pointer">高级：粘贴设备令牌 / agent URL</summary>
+	        <input id="tok" placeholder="粘贴 print 令牌 kp_...">
+	      </details>
+	      <div class="btnrow">
+	        <button onclick="start('browser')">登录并开始接单</button>
+	        <button class="gold" onclick="connectSerial()">连接 GP-3120TN</button>
+	      </div>
+	      <label class="inline"><input id="autoAck" type="checkbox"> 打印后自动确认出队（仅 kiosk / 已验证打印机使用）</label>
+	      <div class="modes">
+	        <div class="mode"><b>任何电脑可用</b><p>Mac / Windows / Linux 打开本页即可。会弹系统打印框；打印出来后点“已打印”出队。</p></div>
+	        <div class="mode"><b>Chrome / Edge 直连</b><p>支持 Web Serial 的桌面浏览器可授权连接 GP-3120TN，直接发送 TSPL 指令。</p></div>
+	        <div class="mode"><b>无人值守</b><p>厨房专用机运行本地 agent；脚本会保持电脑不睡眠，并自动拉取订单打印。</p></div>
+	      </div>
+	      <div class="warn">网页端必须经过浏览器/系统权限。普通网页不能悄悄控制本地打印机；这是浏览器安全边界，不是代码能绕过的限制。</div>
+	    </div>
+	    <div class="manual">
+	      <h2>本机快捷启动</h2>
+	      <div class="muted">自动打印要在厨房电脑跑本地 agent。先输入厨房密码，再点对应系统复制命令；命令会下载 agent、安装依赖、禁止睡眠并启动。</div>
+	      <div class="chiprow">
+	        <button class="secondary" onclick="previewLauncher('mac')">Mac</button>
+	        <button class="secondary" onclick="previewLauncher('win')">Windows</button>
+	        <button class="secondary" onclick="previewLauncher('linux')">Linux</button>
+	      </div>
+	      <div class="command-box">
+	        <textarea id="launcherCmd" readonly spellcheck="false"></textarea>
+	      </div>
+	      <div class="chiprow">
+	        <button onclick="copyCurrentLauncher()">复制命令</button>
+	        <button class="gold" onclick="downloadCurrentLauncher()">下载脚本</button>
+	        <button class="secondary" onclick="window.open('https://nodejs.org/','_blank')">安装 Node.js</button>
+	      </div>
+	      <div class="muted" id="launcherMsg" style="margin-top:8px">Mac 默认适合 Intel MacBook + GP-3120TN；Windows 后续也用同一套 agent。</div>
+	    </div>
+	    </div>
+	  </div>
+  <!-- 今日看板放在最上面：挂墙平板只有 768px 高，出餐比打小票、比设置都重要，
+       首屏必须先看到「做什么」，设置/打印队列往下排。 -->
+  <section id="board" style="display:none">
+    <div class="board-head">
+      <h2 id="boardTitle">今日看板</h2>
+      <div><span id="boardCount" class="cnt"></span><span id="boardHot" class="cnt hot"></span></div>
+    </div>
+    <div id="boardAlert" class="alert" style="display:none"></div>
+    <div id="boardGrid" class="board-grid"></div>
+    <div id="boardEmpty" class="empty big" style="display:none"><b>今天还没有待做的订单</b><span>新订单会自动出现在这里，每 5 秒刷新一次。</span></div>
+  </section>
+  <div class="panel rtbar" id="runtime" style="display:none">
+    <span class="rtlabel">运行状态</span>
+    <span class="muted" id="modeText">浏览器打印模式</span>
+    <div class="btnrow rtbtns">
+      <button class="secondary" onclick="showSetup()">设置</button>
+      <button class="gold" onclick="connectSerial()">连接 / 重连 GP-3120TN</button>
+      <button class="secondary" onclick="tick()">刷新</button>
+      <button class="red" onclick="logout()">退出登录</button>
+    </div>
+  </div>
+  <div id="printHead" class="sechead" style="display:none">🖨 打印队列</div>
+  <div id="alert" class="alert" style="display:none"></div>
+  <div id="list"></div>
+  <div id="empty" class="empty" style="display:none"><b>暂无待打印订单</b><span>新订单会自动出现在这里（每 5 秒刷新一次）。</span></div>
+</div>
+<div id="ktoast" class="ktoast" style="display:none"></div>
+<div id="printArea"></div>
+<script>
+var TEST_ONLY = document.documentElement.getAttribute('data-hl-environment') === 'test';
+var TOKEN = '', SESSION = '', timer = null, printing = false, MODE = 'browser', PROFILE = { id:'text80', label:'80mm 通用小票机', width_mm:72, cols:48, font_px:12, line_height:1.45 };
+var SERIAL_PORT = null;
+var SHOWN = {};          // job.id -> { job, node }，屏上现在挂着哪些票
+var AUTO_Q = [], AUTO_SEEN = {}, CURRENT_PRINT = '';
+var qp = new URLSearchParams(location.search);
+function $(id){ return document.getElementById(id); }
+var LAUNCHER_OS = 'mac';
+function setStatus(s){ $('status').textContent = s; }
+function showSetup(){ $('setup').style.display='block'; }
+function autoAck(){ var el = $('autoAck'); return !!(el && el.checked); }
+function savePrefs(){
+  localStorage.setItem('hl_print_auto_ack', autoAck() ? '1' : '0');
+  // 中途才勾上自动打印时，屏上已有的票也要补进队列，否则它们永远等不到自动打印。
+  if(autoAck()){ for(var id in SHOWN) queueAuto(SHOWN[id].job, SHOWN[id].node); }
+}
+function restorePrefs(){ $('autoAck').checked = localStorage.getItem('hl_print_auto_ack') === '1'; $('autoAck').onchange = savePrefs; }
+function setAlert(msg){ var el = $('alert'); if(!el) return; el.textContent = msg || ''; el.style.display = msg ? 'block' : 'none'; renderEmpty(); }
+function renderEmpty(){
+  var el = $('empty');
+  if(!el) return;
+  // 后台正在报错时不能说「暂无待打印订单」—— 那时候我们根本不知道有没有单。
+  var erroring = $('alert') && $('alert').style.display === 'block';
+  var live = (TOKEN || SESSION) && $('runtime').style.display !== 'none';
+  el.style.display = (live && !erroring && !Object.keys(SHOWN).length) ? 'block' : 'none';
+}
+function setMode(mode, text){
+  if(TEST_ONLY){ mode = 'browser'; text = '测试看板 · 实体打印已关闭'; }
+  MODE = mode;
+  $('runtime').style.display='block';
+  $('board').style.display='block';
+  $('printHead').style.display='block';
+  $('modeText').innerHTML = text || (mode === 'serial' ? '<span class="ok">GP-3120TN 直连模式</span>' : '浏览器打印模式');
+  renderEmpty();
+}
+function apiUrl(path){ return TOKEN ? path + '?t=' + encodeURIComponent(TOKEN) : path; }
+function authHeaders(extra){ extra = extra || {}; return SESSION ? Object.assign({ authorization:'Bearer ' + SESSION }, extra) : extra; }
+function shellQuote(s){ return "'" + String(s).replace(/'/g, "'\"'\"'") + "'"; }
+function psQuote(s){ return "'" + String(s).replace(/'/g, "''") + "'"; }
+function kitchenBaseUrl(){
+  if(TEST_ONLY) return location.origin;
+  return location.origin;
+}
+function agentSourceUrl(){ return new URL('/tools/kitchen-print-agent.mjs', location.origin).href; }
+function launcherPassword(){
+  var el = $('kitchenPw');
+  return ((el && el.value) || '').trim();
+}
+function launcherScript(os){
+  var pw = launcherPassword();
+  if(!pw) return '';
+  var base = kitchenBaseUrl();
+  var source = agentSourceUrl();
+  if(os === 'win'){
+    return [
+      "$Root = Join-Path $env:USERPROFILE 'hawkerline-print-agent'",
+      "New-Item -ItemType Directory -Force -Path $Root | Out-Null",
+      "Set-Location $Root",
+      "if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host 'Install Node.js first: https://nodejs.org'; exit 1 }",
+      "if (-not (Test-Path package.json)) { npm init -y | Out-Null }",
+      "npm install iconv-lite | Out-Null",
+      "Invoke-WebRequest -Uri " + psQuote(source) + " -OutFile 'kitchen-print-agent.mjs'",
+      "powercfg /change standby-timeout-ac 0 | Out-Null",
+      "powercfg /change monitor-timeout-ac 0 | Out-Null",
+      "$env:HL_PRINT_BASE_URL = " + psQuote(base),
+      "$env:HL_KITCHEN_PASSWORD = " + psQuote(pw),
+      "$env:HL_PRINT_MODE = 'tspl'",
+      "$env:HL_PRINT_PRINTER = 'GP-3120TN'",
+      "$env:HL_TSPL_WIDTH_MM = '76'",
+      "$env:HL_TSPL_HEIGHT_MM = '120'",
+      "$env:HL_TSPL_GAP_MM = '0'",
+      "$env:HL_TSPL_COLS = '32'",
+      "node kitchen-print-agent.mjs"
+    ].join('\n');
+  }
+  var inhibit = os === 'linux' ? 'systemd-inhibit --what=sleep --why="Hawkerline kitchen print agent" ' : 'caffeinate -dimsu ';
+  return [
+    'mkdir -p "$HOME/hawkerline-print-agent"',
+    'cd "$HOME/hawkerline-print-agent"',
+    'command -v node >/dev/null || { echo "Install Node.js first: https://nodejs.org"; exit 1; }',
+    '[ -f package.json ] || npm init -y >/dev/null',
+    'npm install iconv-lite >/dev/null',
+    'curl -fsSL ' + shellQuote(source) + ' -o kitchen-print-agent.mjs',
+    'export HL_PRINT_BASE_URL=' + shellQuote(base),
+    'export HL_KITCHEN_PASSWORD=' + shellQuote(pw),
+    'export HL_PRINT_MODE=tspl',
+    'export HL_PRINT_PRINTER=GP-3120TN',
+    'export HL_TSPL_WIDTH_MM=76',
+    'export HL_TSPL_HEIGHT_MM=120',
+    'export HL_TSPL_GAP_MM=0',
+    'export HL_TSPL_COLS=32',
+    inhibit + 'node kitchen-print-agent.mjs'
+  ].join('\n');
+}
+function previewLauncher(os){
+  os = os || 'mac';
+  LAUNCHER_OS = os;
+  var cmd = launcherScript(os);
+  $('launcherCmd').value = cmd || '先在左侧输入厨房密码，再点 Mac / Windows / Linux 生成命令。';
+  $('launcherMsg').textContent = os === 'win'
+    ? 'Windows 会关闭接电源时的睡眠和显示器超时；需要 PowerShell 运行。'
+    : os === 'linux'
+      ? 'Linux 会用 systemd-inhibit 阻止睡眠；没有 systemd 的发行版可直接运行 node 命令。'
+      : 'Mac 会用 caffeinate 阻止睡眠，适合 Intel MacBook + GP-3120TN。';
+}
+async function copyCurrentLauncher(){
+  var cmd = launcherScript(LAUNCHER_OS);
+  if(!cmd){ alert('先输入厨房密码再复制命令'); return; }
+  // 剪贴板权限可能被浏览器/系统拒绝（kiosk、非安全上下文、用户拒权）。
+  // 不能让 writeText 直接抛出去：那样按钮点了没反应，还留一条控制台报错。
+  var ok = false;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(cmd); ok = true; }
+  }catch(e){ ok = false; }
+  if(!ok){
+    try{ $('launcherCmd').focus(); $('launcherCmd').select(); ok = document.execCommand('copy'); }
+    catch(e){ ok = false; }
+  }
+  $('launcherMsg').textContent = ok
+    ? ('已复制 ' + LAUNCHER_OS + ' 启动命令')
+    : '复制被浏览器拒绝，请手动选中上面框里的命令自行复制。';
+}
+function downloadCurrentLauncher(){
+  var cmd = launcherScript(LAUNCHER_OS);
+  if(!cmd){ alert('先输入厨房密码再下载脚本'); return; }
+  var isWin = LAUNCHER_OS === 'win';
+  var body = isWin ? cmd + '\n' : '#!/usr/bin/env bash\nset -euo pipefail\n' + cmd + '\n';
+  var blob = new Blob([body], { type:'text/plain' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = isWin ? 'start-hawkerline-print-agent.ps1' : 'start-hawkerline-print-agent.command';
+  document.body.appendChild(a);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  a.remove();
+}
+async function loginKitchen(){
+  var pwEl = $('kitchenPw');
+  var password = ((pwEl && pwEl.value) || '').trim();
+  if(!password) return false;
+  var r = await fetch('/api/kitchen/login', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({ password: password }) });
+  var d = await r.json().catch(function(){ return {}; });
+  if(!r.ok || !d.ok){ alert(d.error || ('厨房登录失败：' + r.status)); return false; }
+  SESSION = d.token;
+  localStorage.setItem('hl_kitchen_session', SESSION);
+  return true;
+}
+async function start(mode){
+  mode = mode || 'browser';
+  TOKEN = (qp.get('t') || $('tok').value || '').trim();
+  SESSION = TOKEN ? '' : (localStorage.getItem('hl_kitchen_session') || '');
+  if(!TOKEN && !SESSION){
+    var ok = await loginKitchen();
+    if(!ok) return;
+  }
+  if(TOKEN) localStorage.setItem('hl_print_tok', TOKEN);
+  $('setup').style.display='none';
+  setMode(mode);
+  setStatus('已连接 · 等待订单');
+  if(timer) clearInterval(timer);
+  tick(); timer = setInterval(tick, 5000);
+}
+async function connectSerial(){
+  if(TEST_ONLY) return;
+  TOKEN = (qp.get('t') || $('tok').value || '').trim();
+  SESSION = TOKEN ? '' : (localStorage.getItem('hl_kitchen_session') || '');
+  if(!TOKEN && !SESSION){
+    var ok = await loginKitchen();
+    if(!ok) return;
+  }
+  if(!('serial' in navigator)){
+    alert('这个浏览器不支持 Web Serial。请用桌面版 Chrome/Edge，或改用浏览器打印/本地 agent。');
+    return;
+  }
+  try{
+    SERIAL_PORT = await navigator.serial.requestPort();
+    await SERIAL_PORT.open({ baudRate: 9600 });
+    if(TOKEN) localStorage.setItem('hl_print_tok', TOKEN);
+    $('setup').style.display='none';
+    setMode('serial', '<span class="ok">GP-3120TN 已授权连接 · TSPL 直打</span>');
+    setStatus('已连接 · GP-3120TN');
+    if(timer) clearInterval(timer);
+    tick(); timer = setInterval(tick, 5000);
+  }catch(e){
+    setStatus('连接失败');
+    alert('连接失败：' + e.message);
+  }
+}
+// 票面字号来自后台 profile，但 cols(48) × font_px 未必塞得进 width_mm。
+// 实测 72mm 纸 + 12px 时 48 列要 347px，纸只有 272px —— 每条分隔线都会折行/溢出到纸外。
+// 所以按实际度量把字号往下压到刚好装得下；本来就装得下就一个字不动。
+function applyProfile(p){
+  PROFILE = p;
+  var root = document.documentElement;
+  var widthMm = Number(p.width_mm) || 72;
+  var cols = Number(p.cols) || 48;
+  var fontPx = Number(p.font_px) || 12;
+  root.style.setProperty('--paper-width', widthMm + 'mm');
+  root.style.setProperty('--print-line', p.line_height || 1.45);
+  var probe = document.createElement('span');
+  probe.style.cssText = "position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre;font-family:'SF Mono',monospace;font-size:" + fontPx + 'px';
+  probe.textContent = new Array(cols + 1).join('0');
+  var ruler = document.createElement('div');
+  ruler.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;width:' + widthMm + 'mm';
+  document.body.appendChild(probe); document.body.appendChild(ruler);
+  var need = probe.getBoundingClientRect().width, paper = ruler.getBoundingClientRect().width;
+  probe.remove(); ruler.remove();
+  var fit = fontPx;
+  if(need > 0 && paper > 0 && need > paper) fit = Math.max(6, Math.floor(fontPx * paper / need * 10) / 10);
+  root.style.setProperty('--print-font', fit + 'px');
+  PROFILE.fit_font_px = fit;
+}
+async function poll(){
+  if(TEST_ONLY){ setStatus('测试看板 · 实体打印已关闭'); return; }
+  if(printing || (!TOKEN && !SESSION)) return;
+  try{
+    var r = await fetch(apiUrl('/api/print/pending'), { headers: authHeaders() });
+    if(r.status===401){ setStatus('登录已失效'); setAlert('登录已失效，请重新输入厨房密码。'); localStorage.removeItem('hl_kitchen_session'); SESSION=''; if(timer) clearInterval(timer); timer=null; $('setup').style.display='block'; renderEmpty(); return; }
+    // 后台 5xx 会返回一段合法 JSON，直接 r.json() 解析得动 → jobs 变空数组 →
+    // 屏上写「等待订单」。厨房会以为没单，其实是后台挂了。必须先看 r.ok。
+    if(!r.ok){ pollFailed('后台出错（HTTP ' + r.status + '）· 单子可能没拉下来，请立刻联系老板'); return; }
+    var d = await r.json();
+    if(!d || !Array.isArray(d.jobs)){ pollFailed('后台返回内容异常 · 单子可能没拉下来，请立刻联系老板'); return; }
+    if(d.profile) applyProfile(d.profile);
+    var jobs = d.jobs;
+    setAlert('');
+    setStatus(jobs.length ? (jobs.length + ' 单待打印 · ' + (PROFILE.label || '')) : ('已连接 · ' + (PROFILE.label || '') + ' · 等待订单'));
+    if(MODE === 'serial'){
+      for(var pi = 0; pi < jobs.length; pi++){ await printSerial(jobs[pi]); }
+    }else{
+      renderPending(jobs, true);
+    }
+  }catch(e){ pollFailed('连不上后台（' + ((e && e.message) || '网络错误') + '）· 正在重试'); }
+}
+function pollFailed(msg){
+  // 屏上已有的票一张不动：后台挂了不代表这些单不用做。
+  setStatus('后台异常');
+  setAlert(msg);
+}
+function dropTicket(id){
+  var e = SHOWN[id];
+  if(e && e.node && e.node.parentNode) e.node.remove();
+  delete SHOWN[id];
+  renderEmpty();
+}
+function queueAuto(job, node){
+  if(!autoAck() || AUTO_SEEN[job.id]) return;
+  AUTO_SEEN[job.id] = 1;
+  AUTO_Q.push({ job: job, node: node });
+  pumpAuto();
+}
+// 一次只打一张，打完接着打下一张。
+// 旧写法在渲染循环里 `if(autoAck() && !printing) printBrowser(...)`：第一张一开打
+// printing 就是 true，同批的第 2..N 张全被跳过；而它们已经进了「已渲染」集合，
+// 之后每轮轮询又都跳过 —— 无人值守模式下第二张之后的单永远不会自己打出来。
+async function pumpAuto(){
+  if(printing || !autoAck()) return;
+  var next = AUTO_Q.shift();
+  while(next && !SHOWN[next.job.id]) next = AUTO_Q.shift();
+  if(!next) return;
+  await printBrowser(next.job, next.node);
+  pumpAuto();
+}
+function renderPending(jobs, replace){
+  var list = $('list');
+  var incoming = {};
+  for(var ri = 0; ri < jobs.length; ri++){
+    var job = jobs[ri];
+    incoming[job.id] = 1;
+    if(SHOWN[job.id]) continue;
+    var div = document.createElement('div');
+    div.className = 'ticket';
+    div.dataset.jobId = job.id;
+    var pre = document.createElement('div');
+    pre.textContent = job.content;
+    var actions = document.createElement('div');
+    actions.className = 'actions';
+    var printBtn = document.createElement('button');
+    printBtn.textContent = '打印这张';
+    printBtn.onclick = (function(j, node){ return function(){ printBrowser(j, node); }; })(job, div);
+    var ackBtn = document.createElement('button');
+    ackBtn.className = 'gold';
+    ackBtn.textContent = '已打印，确认出队';
+    ackBtn.onclick = (function(j, node){ return function(){ ackJob(j.id, node); }; })(job, div);
+    actions.append(printBtn, ackBtn);
+    div.append(pre, actions);
+    list.prepend(div);
+    SHOWN[job.id] = { job: job, node: div };
+    queueAuto(job, div);
+  }
+  if(replace){
+    // 后台已经不再列出的票要从屏上撤掉：订单被取消/退款后 read-side 会把它过滤掉，
+    // 别的设备（agent / CloudPRNT）打完也会出队。留在屏上厨房就会照着做一张废单。
+    for(var id in SHOWN){
+      if(incoming[id] || (printing && CURRENT_PRINT === id)) continue;
+      dropTicket(id);
+    }
+  }
+  renderEmpty();
+}
+function afterPrintOnce(timeout){
+  timeout = timeout || 1500;
+  return new Promise(function(resolve){
+    var done = false;
+    var finish = function(){ if(done) return; done = true; removeEventListener('afterprint', finish); resolve(); };
+    addEventListener('afterprint', finish, { once:true });
+    setTimeout(finish, timeout);
+  });
+}
+async function printBrowser(job, node){
+  if(TEST_ONLY) return;
+  printing = true;
+  CURRENT_PRINT = job.id;
+  try{
+    $('printArea').textContent = job.content;
+    window.print();
+    await afterPrintOnce();
+    if(autoAck()) await ackJob(job.id, node);
+  }finally{
+    printing = false;
+    CURRENT_PRINT = '';
+  }
+}
+async function ackJob(id, node){
+  try{
+    var r = await fetch(apiUrl('/api/print/ack'), {
+      method:'POST',
+      headers: authHeaders({'content-type':'application/json'}),
+      body:JSON.stringify({ ids:[id] })
+    });
+    if(!r.ok){ setAlert('出队失败（HTTP ' + r.status + '），这张单还留在队列里，请重试。'); return; }
+  }catch(e){ setAlert('出队失败（' + ((e && e.message) || '网络错误') + '），这张单还留在队列里，请重试。'); return; }
+  if(node && node.parentNode) node.remove();
+  dropTicket(id);
+  setStatus('已确认 · 等待订单');
+}
+function logout(){
+  if(timer) clearInterval(timer);
+  timer = null;
+  TOKEN = ''; SESSION = ''; SERIAL_PORT = null; MODE = 'browser';
+  AUTO_Q = []; AUTO_SEEN = {};
+  localStorage.removeItem('hl_kitchen_session');
+  localStorage.removeItem('hl_print_tok');
+  for(var id in SHOWN) dropTicket(id);
+  BOARD = { orders:[], labels:{}, date:'', loaded:false, err:'', sig:null };
+  BOARD_PENDING = {}; BOARD_FLASH = {};
+  $('boardGrid').textContent = '';
+  $('boardAlert').style.display = 'none';
+  $('boardEmpty').style.display = 'none';
+  $('ktoast').style.display = 'none';
+  $('board').style.display = 'none';
+  $('printHead').style.display = 'none';
+  $('runtime').style.display = 'none';
+  $('setup').style.display = 'block';
+  $('kitchenPw').value = '';
+  $('tok').value = '';
+  setAlert('');
+  renderEmpty();
+  setStatus('已退出');
+}
+function cellWidth(s){
+  var w = 0;
+  var text = String(s || '');
+  for(var i = 0; i < text.length; i++){
+    var ch = text.charAt(i);
+    var cp = text.charCodeAt(i);
+    w += (cp >= 0x1100 && (cp <= 0x115F || cp === 0x2329 || cp === 0x232A || (cp >= 0x2E80 && cp <= 0xA4CF) || (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE10 && cp <= 0xFE19) || (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6))) ? 2 : 1;
+  }
+  return w;
+}
+function cutCells(s, max){
+  var out = '', w = 0;
+  var text = String(s || '');
+  for(var i = 0; i < text.length; i++){
+    var ch = text.charAt(i);
+    var cw = cellWidth(ch);
+    if(w + cw > max) break;
+    out += ch; w += cw;
+  }
+  return out;
+}
+function wrapCells(s, width){
+  var lines = [];
+  var rest = String(s || '').replace(/\t/g, '  ');
+  if(!rest) return [''];
+  while(rest){ var take = cutCells(rest, width); lines.push(take); rest = rest.slice(take.length); }
+  return lines;
+}
+function buildTspl(content){
+  var cols = 32, top = 16, left = 16, line = 32;
+  var rawLines = String(content || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  var lines = [];
+  for(var li = 0; li < rawLines.length; li++){
+    var wrapped = wrapCells(rawLines[li], cols);
+    for(var wi = 0; wi < wrapped.length; wi++) lines.push(wrapped[wi]);
+  }
+  var height = Math.max(120, Math.ceil((top + lines.length * line + 32) / 8));
+  var cmds = [
+    'SIZE 76 mm,' + height + ' mm',
+    'GAP 0 mm,0 mm',
+    'DIRECTION 1',
+    'REFERENCE 0,0',
+    'SPEED 4',
+    'DENSITY 8',
+    'CLS',
+    'CODEPAGE UTF-8'
+  ];
+  for(var ti = 0; ti < lines.length; ti++){
+    var txt = lines[ti];
+    cmds.push('TEXT ' + left + ',' + (top + ti * line) + ',"TSS24.BF2",0,1,1,"' + String(txt).replace(/"/g, "'") + '"');
+  }
+  cmds.push('PRINT 1,1', '');
+  return new TextEncoder().encode(cmds.join('\r\n'));
+}
+async function printSerial(job){
+  if(TEST_ONLY) return;
+  if(!SERIAL_PORT){ setMode('browser', '<span class="bad">GP-3120TN 未连接，已退回浏览器打印模式</span>'); renderPending([job]); return; }
+  printing = true;
+  try{
+    var writer = SERIAL_PORT.writable.getWriter();
+    try{ await writer.write(buildTspl(job.content)); }
+    finally{ writer.releaseLock(); }
+    await ackJob(job.id);
+    var div = document.createElement('div');
+    div.className = 'ticket';
+    div.textContent = job.content;
+    $('list').prepend(div);
+  }catch(e){
+    setMode('browser', '<span class="bad">直连打印失败，已退回浏览器打印模式：' + e.message + '</span>');
+    renderPending([job]);
+  }finally{
+    printing = false;
+  }
+}
+// ================== 今日看板 ==================
+// 厨房这块平板前站的是真正出餐的人，状态只能靠老板在 Telegram 上点 —— 闭环在厨房是断的。
+// 这里把 new→preparing→ready→done 的入口搬到厨师手边，并且按「两米可读」重排版面。
+var BOARD = { orders: [], labels: {}, date: '', loaded: false, err: '', sig: null };
+var BOARD_PENDING = {};   // order_id -> 1，在途的推进请求；防重复提交 + 期间不重排 DOM
+var BOARD_FLASH = {};     // order_id -> 高亮到期时间戳，推进成功后闪一下
+var BOARD_TOAST_T = null;
+var ST_RANK = { ready: 0, preparing: 1, new: 2 };
+var FULFIL_TEXT = { pickup:'🥡 自取', walkin:'🏪 到店', anytime:'🛵 随时送', discount:'🛵 优惠配送', delivery:'🛵 配送', route:'🚗 拼单顺路' };
+var STATUS_FALLBACK = { new:'已下单', preparing:'制作中', ready:'可取餐/已出餐', done:'已完成' };
+// 所有服务端字段一律走 textContent / dataset，不拼 innerHTML —— 顾客名、备注、商品名都是外部输入。
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(text != null) n.textContent = text;
+  return n;
+}
+function statusLabel(st){ return BOARD.labels[st] || STATUS_FALLBACK[st] || st; }
+function boardSort(a, b){
+  // 顾客已经站在柜台前等着了 —— 这类永远排最前，不管它处在哪个状态。
+  var aa = a.arrived ? 0 : 1, ba = b.arrived ? 0 : 1;
+  if(aa !== ba) return aa - ba;
+  var ar = ST_RANK[a.fulfil_status], br = ST_RANK[b.fulfil_status];
+  ar = (ar == null) ? 9 : ar; br = (br == null) ? 9 : br;
+  if(ar !== br) return ar - br;
+  return String(a.created_at || '').localeCompare(String(b.created_at || ''));
+}
+function timeText(o){
+  var d = String(o.deliver_at || '').trim(), t = String(o.deliver_time || '').trim();
+  if(!d && !t) return '⏰ 尽快';
+  var day = (!d || d === BOARD.date) ? '今天' : d;
+  return '⏰ ' + (day + (t ? ' ' + t : '')).trim();
+}
+function boardToast(msg, kind){
+  var t = $('ktoast');
+  t.className = 'ktoast' + (kind === 'warn' || kind === 'bad' ? ' ' + kind : '');
+  t.textContent = msg;
+  t.style.display = 'block';
+  if(BOARD_TOAST_T) clearTimeout(BOARD_TOAST_T);
+  BOARD_TOAST_T = setTimeout(function(){ t.style.display = 'none'; }, 3600);
+}
+function boardActions(st){
+  var out = [];
+  if(st === 'new') out.push({ to:'preparing', text:'👨‍🍳 开始制作', cls:'kbtn go' });
+  if(st === 'new' || st === 'preparing') out.push({ to:'ready', text:'✅ 出餐完成', cls: st === 'preparing' ? 'kbtn go' : 'kbtn next' });
+  if(st === 'ready') out.push({ to:'done', text:'📦 已交付', cls:'kbtn' });
+  return out;
+}
+function buildCard(o){
+  // 状态只认白名单里的值再拼进 class，不让服务端字符串直接进 className。
+  var st = (ST_RANK[o.fulfil_status] != null) ? o.fulfil_status : 'new';
+  var card = el('div', 'kcard st-' + st + (o.arrived ? ' arrived' : '') + ((BOARD_FLASH[o.id] || 0) > Date.now() ? ' kflash' : ''));
+  card.dataset.orderId = o.id;
+
+  var head = el('div', 'khead');
+  head.appendChild(el('span', 'kpill', statusLabel(st)));
+  if(o.arrived) head.appendChild(el('span', 'karrived', '🙋 顾客已到店'));
+  head.appendChild(el('span', 'kinv', o.invoice_no || o.id));
+  card.appendChild(head);
+
+  // 商品名 + 数量：厨师唯一真正要读的东西，所以它最大。
+  var items = Array.isArray(o.items) ? o.items : [];
+  var box = el('div', 'kitems');
+  if(!items.length){
+    var blank = el('div', 'kitem');
+    blank.appendChild(el('span', 'nm', '（无商品明细，请查小票）'));
+    box.appendChild(blank);
+  }else{
+    for(var i = 0; i < items.length; i++){
+      var row = el('div', 'kitem');
+      row.appendChild(el('span', 'nm', items[i] && items[i].name ? items[i].name : '未知商品'));
+      row.appendChild(el('span', 'qty', '×' + (Number(items[i] && items[i].qty) || 0)));
+      box.appendChild(row);
+      // 套餐展开成分：板上只写「1 × 套餐」的话，后厨不知道该做哪几样
+      var sub = (items[i] && Array.isArray(items[i].sub)) ? items[i].sub : [];
+      for(var j = 0; j < sub.length; j++){
+        var srow = el('div', 'kitem ksub');
+        srow.appendChild(el('span', 'nm', '└ ' + (sub[j].name || sub[j].sku || '')));
+        srow.appendChild(el('span', 'qty', '×' + (Number(sub[j].qty) || 0)));
+        box.appendChild(srow);
+      }
+    }
+  }
+  card.appendChild(box);
+
+  var meta = el('div', 'kmeta');
+  meta.appendChild(el('span', null, FULFIL_TEXT[o.fulfilment] || ('📦 ' + (o.fulfilment || '自取'))));
+  meta.appendChild(el('span', null, timeText(o)));
+  card.appendChild(meta);
+  if(o.customer_name) card.appendChild(el('div', 'kcust', '顾客：' + o.customer_name));
+  if(o.note) card.appendChild(el('div', 'knote', '📝 ' + o.note));
+
+  var acts = el('div', 'kacts');
+  var defs = boardActions(st);
+  for(var a = 0; a < defs.length; a++){
+    var btn = el('button', defs[a].cls, defs[a].text);
+    btn.dataset.to = defs[a].to;
+    btn.onclick = (function(id, to, node){ return function(){ advanceOrder(id, to, node); }; })(o.id, defs[a].to, card);
+    acts.appendChild(btn);
+  }
+  card.appendChild(acts);
+  return card;
+}
+function boardChrome(orders){
+  var arrived = 0;
+  for(var i = 0; i < orders.length; i++){ if(orders[i].arrived) arrived++; }
+  $('boardTitle').textContent = '今日看板' + (BOARD.date ? ' · ' + BOARD.date : '');
+  $('boardCount').textContent = orders.length ? (orders.length + ' 单待做') : (BOARD.loaded && !BOARD.err ? '全部做完了' : '');
+  $('boardHot').textContent = arrived ? ('🙋 ' + arrived + ' 位顾客已到店') : '';
+  // 后台报错时绝不说「今天没单」—— 那时候我们根本不知道有没有单。
+  $('boardEmpty').style.display = (BOARD.loaded && !BOARD.err && !orders.length) ? 'block' : 'none';
+}
+function renderBoard(){
+  // 有单正在推进时不重排 DOM：否则「处理中」的按钮会被整片替换掉，用户以为没点上又点一次。
+  if(Object.keys(BOARD_PENDING).length) return;
+  var alertEl = $('boardAlert');
+  alertEl.textContent = BOARD.err || '';
+  alertEl.style.display = BOARD.err ? 'block' : 'none';
+  var orders = BOARD.orders.slice().sort(boardSort);
+  boardChrome(orders);
+  // 内容没变就不重建 DOM：每 5 秒整片重绘会把厨师正按着的按钮换掉。
+  var now = Date.now(), flashing = [];
+  for(var k in BOARD_FLASH){ if(BOARD_FLASH[k] > now) flashing.push(k); else delete BOARD_FLASH[k]; }
+  var sig = orders.map(function(o){
+    return [o.id, o.fulfil_status, o.arrived ? 1 : 0, (o.items || []).length].join(':');
+  }).join('|') + '#' + flashing.sort().join(',');
+  if(sig === BOARD.sig) return;
+  BOARD.sig = sig;
+  var grid = $('boardGrid');
+  grid.textContent = '';
+  for(var i = 0; i < orders.length; i++) grid.appendChild(buildCard(orders[i]));
+}
+function boardFailed(msg){
+  // 卡片一张不撤：后台挂了不代表这些单不用做。空态也必须让位给红色告警。
+  BOARD.err = msg;
+  BOARD.sig = null;
+  var alertEl = $('boardAlert');
+  alertEl.textContent = msg;
+  alertEl.style.display = 'block';
+  $('boardEmpty').style.display = 'none';
+}
+async function pollBoard(){
+  if(!TOKEN && !SESSION) return;
+  if(document.hidden) return;   // 隐藏时暂停：平板熄屏 / 切走后不再打后台，回来立刻补一次
+  try{
+    var r = await fetch(apiUrl('/api/kitchen/board'), { headers: authHeaders() });
+    if(r.status === 401){ boardFailed('登录已失效，请重新输入厨房密码。'); return; }
+    // 5xx 也可能返回一段能解析的 JSON；不先看 r.ok 就会把「后台挂了」显示成「今天没单」。
+    if(!r.ok){ boardFailed('看板加载失败（HTTP ' + r.status + '）· 这不等于今天没单，请重试或联系老板'); return; }
+    var d = await r.json();
+    if(!d || !Array.isArray(d.orders)){ boardFailed('看板返回内容异常 · 这不等于今天没单，请重试或联系老板'); return; }
+    BOARD.date = d.date || '';
+    BOARD.labels = (d.labels && typeof d.labels === 'object') ? d.labels : {};
+    BOARD.orders = d.orders;
+    BOARD.loaded = true;
+    BOARD.err = '';
+    renderBoard();
+  }catch(e){ boardFailed('看板连不上后台（' + ((e && e.message) || '网络错误') + '）· 正在重试'); }
+}
+function applyLocalStatus(id, status){
+  var next = [];
+  for(var i = 0; i < BOARD.orders.length; i++){
+    var o = BOARD.orders[i];
+    if(o.id !== id){ next.push(o); continue; }
+    if(status === 'done') continue;          // 做完的单立刻从板上消失，别让厨师再做一遍
+    o.fulfil_status = status;
+    next.push(o);
+  }
+  BOARD.orders = next;
+  BOARD.sig = null;
+}
+async function advanceOrder(id, to, card){
+  if(BOARD_PENDING[id]) return;              // 防重复提交：同一单同时只允许一个在途请求
+  BOARD_PENDING[id] = 1;
+  var ord = null;
+  for(var i = 0; i < BOARD.orders.length; i++){ if(BOARD.orders[i].id === id) ord = BOARD.orders[i]; }
+  var tag = (ord && ord.invoice_no) || id;
+  var btns = card ? card.querySelectorAll('button') : [];
+  var hit = card ? card.querySelector('button[data-to="' + to + '"]') : null;
+  var label = hit ? hit.textContent : '';
+  for(var b = 0; b < btns.length; b++) btns[b].disabled = true;
+  if(hit) hit.textContent = '⏳ 处理中…';
+  try{
+    var r = await fetch(apiUrl('/api/kitchen/board/advance'), {
+      method:'POST',
+      headers: authHeaders({'content-type':'application/json'}),
+      body: JSON.stringify({ order_id:id, to:to })
+    });
+    var d = await r.json().catch(function(){ return {}; });
+    if(!r.ok || !d || !d.ok){
+      // 服务端的 error 原样显示：倒退、非法状态、订单不存在都靠它说清楚。
+      boardToast((d && d.error) || ('推进失败（HTTP ' + r.status + '）'), 'bad');
+      if(hit) hit.textContent = label;
+      for(var e1 = 0; e1 < btns.length; e1++) btns[e1].disabled = false;
+      return;
+    }
+    applyLocalStatus(id, d.status);
+    BOARD_FLASH[id] = Date.now() + 2000;
+    if(d.noop) boardToast(d.message || '这单已经被别人推进过了', 'warn');
+    else boardToast('✅ ' + tag + ' → ' + statusLabel(d.status), null);
+  }catch(err){
+    boardToast('推进失败（' + ((err && err.message) || '网络错误') + '），请重试', 'bad');
+    if(hit) hit.textContent = label;
+    for(var e2 = 0; e2 < btns.length; e2++) btns[e2].disabled = false;
+  }finally{
+    delete BOARD_PENDING[id];
+    renderBoard();
+    setTimeout(renderBoard, 2100);   // 高亮到期后把 kflash 摘掉
+    pollBoard();                     // 立刻跟服务端对一次账，不等下一个 5 秒
+  }
+}
+function tick(){ poll(); pollBoard(); }
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && (TOKEN || SESSION)) pollBoard();
+});
+restorePrefs();
+$('kitchenPw').addEventListener('input', function(){ previewLauncher(LAUNCHER_OS); });
+previewLauncher('mac');
+var savedToken = qp.get('t') || '';
+var savedSession = localStorage.getItem('hl_kitchen_session') || '';
+if(savedToken){ $('tok').value = savedToken; start('browser'); }
+else if(savedSession){ SESSION = savedSession; start('browser'); }
+</script>
+</body></html>

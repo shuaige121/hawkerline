@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="暂无图片">
+  <rect width="320" height="240" fill="#F6EFE0"/>
+  <g fill="none" stroke="#D8B45F" stroke-width="4" stroke-linecap="round">
+    <path d="M92 150c0-31 30-52 68-52s68 21 68 52"/>
+    <path d="M80 150h160" />
+    <path d="M118 118c8-10 20-16 42-16s34 6 42 16"/>
+  </g>
+  <circle cx="160" cy="86" r="6" fill="#D8B45F"/>
+  <text x="160" y="196" font-family="system-ui,'Noto Sans CJK SC',sans-serif" font-size="15"
+        fill="#6E6650" text-anchor="middle">暂无图片</text>
+</svg>

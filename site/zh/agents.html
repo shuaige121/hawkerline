@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hawkerline 智能体接口：MCP、REST 与 llms.txt</title>
+<meta name="description" content="AI 智能体如何操作 Hawkerline 店铺：/mcp 的 MCP、/api/agent/v1 的 REST、OpenAPI 3.1、工具名称与对应权限、预览校验码与审计日志。">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="{{ORIGIN}}/zh/agents.html">
+<link rel="alternate" hreflang="en" href="{{ORIGIN}}/agents.html">
+<link rel="alternate" hreflang="zh" href="{{ORIGIN}}/zh/agents.html">
+<link rel="alternate" hreflang="x-default" href="{{ORIGIN}}/agents.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hawkerline">
+<meta property="og:title" content="Hawkerline 智能体接口：MCP、REST 与 llms.txt">
+<meta property="og:description" content="AI 智能体如何操作 Hawkerline 店铺：/mcp 的 MCP、/api/agent/v1 的 REST、OpenAPI 3.1、工具名称与对应权限、预览校验码与审计日志。">
+<meta property="og:url" content="{{ORIGIN}}/zh/agents.html">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_SG">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hawkerline 智能体接口：MCP、REST 与 llms.txt">
+<meta name="twitter:description" content="AI 智能体如何操作 Hawkerline 店铺：/mcp 的 MCP、/api/agent/v1 的 REST、OpenAPI 3.1、工具名称与对应权限、预览校验码与审计日志。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Hawkerline","description":"Hawkerline 是一套 AI 智能体可以直接操作的餐饮点餐、厨房看板、菜单与收银系统，源码公开，面向新加坡餐饮商户，运行在一个 Cloudflare Worker 和一个 D1 数据库上。","applicationCategory":"BusinessApplication","operatingSystem":"Cloudflare Workers","url":"{{ORIGIN}}/zh/","license":"{{ORIGIN}}/zh/license.html","inLanguage":"zh","sameAs":["https://github.com/shuaige121/hawkerline"]}</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="site-header"><div class="wrap bar">
+<a class="brand" href="../zh/index.html"><svg class="logo" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="var(--accent)"/><path d="M9 19h14a7 7 0 0 1-14 0z" fill="var(--on-accent)"/><path d="M12 8c-1.5 1.7 1.5 2.7 0 4.5M17 8c-1.5 1.7 1.5 2.7 0 4.5M22 8c-1.5 1.7 1.5 2.7 0 4.5" fill="none" stroke="var(--on-accent)" stroke-width="1.6" stroke-linecap="round"/></svg><span>Hawkerline</span></a>
+<nav aria-label="Primary"><a href="../zh/index.html">首页</a><a href="../zh/agents.html" aria-current="page">AI 智能体</a><a href="../zh/license.html">许可</a><a href="../zh/showcase/poxiaoman.html">案例</a><a href="https://github.com/shuaige121/hawkerline">GitHub</a><a class="lang" href="../agents.html" hreflang="en" lang="en" aria-label="切换到英文">English</a></nav>
+</div></header>
+<main id="main">
+
+<section class="hero"><div class="wrap">
+<p class="eyebrow">写给大模型、智能体，以及负责接入的人</p>
+<h1>Hawkerline 智能体接口</h1>
+<p class="lede">Hawkerline 是一套 AI 智能体可以直接操作的餐饮点餐、厨房看板、菜单与收银系统，源码公开，面向新加坡餐饮商户，运行在一个 Cloudflare Worker 和一个 D1 数据库上。本页说明 AI 智能体如何接入一家 Hawkerline 店铺。</p>
+</div></section>
+<section class="section " id="interfaces"><div class="wrap"><h2>四种接入方式</h2><div class="tablewrap"><table><thead><tr><th scope="col">接口</th><th scope="col">地址</th><th scope="col">说明</th></tr></thead><tbody><tr><th scope="row">MCP 服务</th><td><code>/mcp</code></td><td>Model Context Protocol，Streamable HTTP 传输，密钥（bearer）鉴权。响应为 POST 上的 JSON（不使用 server-sent events）。支持协议版本 2025-11-25、2025-06-18、2025-03-26。</td></tr><tr><th scope="row">REST API</th><td><code>POST /api/agent/v1/tools/&lt;tool&gt;</code></td><td>通过 HTTP 提供同样的工具，适用于任何能发 HTTP 请求的智能体、工作流工具或脚本。</td></tr><tr><th scope="row">OpenAPI 文档</th><td><code>/api/agent/v1/openapi.json</code></td><td>OpenAPI 3.1 描述，供能导入 OpenAPI 的工具调用框架使用。</td></tr><tr><th scope="row">llms.txt</th><td><code>/llms.txt</code></td><td>每个部署都会提供，告诉大模型这家店提供什么、如何操作。</td></tr></tbody></table></div>
+<p><strong>兼容性。</strong>任何能通过 Streamable HTTP 发送 <code>Authorization: Bearer</code> 请求头的 MCP 客户端都可以使用，例如 Claude Code。系统未实现 OAuth，因此只支持 OAuth 的连接器无法直接接入；这类智能体可改用 REST API。</p></div></section>
+<section class="section alt" id="keys"><div class="wrap"><h2>智能体密钥与权限</h2><p>店主在 <code>/admin</code> 的 AI 接入页面创建和吊销智能体密钥。密钥形如 <code>hlk_</code> 加 40 位十六进制字符，只显示一次，系统只保存其哈希。吊销后智能体立即失去访问权限。每个密钥每分钟最多调用 120 次。</p><div class="tablewrap"><table><thead><tr><th scope="col">权限</th><th scope="col">允许</th></tr></thead><tbody><tr><th scope="row"><code>menu:read</code></th><td>读取商品、分类与发布状态；预览草稿</td></tr><tr><th scope="row"><code>menu:write</code></th><td>创建和编辑草稿中的商品、图片、显示顺序与分类</td></tr><tr><th scope="row"><code>menu:publish</code></th><td>把已预览的草稿发布给顾客，可立即或定时发布</td></tr><tr><th scope="row"><code>orders:read</code></th><td>读取订单与厨房看板</td></tr><tr><th scope="row"><code>orders:write</code></th><td>推进订单的厨房流程（新单、制作中、待取、完成）</td></tr><tr><th scope="row"><code>store:write</code></th><td>暂停或恢复在线下单</td></tr><tr><th scope="row"><code>reports:read</code></th><td>读取销售汇总</td></tr></tbody></table></div><p>每个智能体只授予它需要的权限。</p></div></section>
+<section class="section " id="tools"><div class="wrap"><h2>工具与对应权限</h2><p>每个工具都同时提供 MCP 与 REST 两种调用方式。</p><div class="tablewrap"><table><thead><tr><th scope="col">工具</th><th scope="col">权限</th><th scope="col">作用</th></tr></thead><tbody><tr><th scope="row"><code>get_store_overview</code></th><td><code>menu:read</code></td><td>起点：店名、是否接单、分类、商品数量、当前线上版本与草稿版本号</td></tr><tr><th scope="row"><code>list_categories</code></th><td><code>menu:read</code></td><td>菜单分类（键、中文名称、英文名称）及各分类下的草稿商品数</td></tr><tr><th scope="row"><code>list_products</code></th><td><code>menu:read</code></td><td>全部草稿商品，含新元价格、分类、组成项与图片状态</td></tr><tr><th scope="row"><code>preview_menu</code></th><td><code>menu:read</code></td><td>对比草稿与线上菜单，并给出 10 分钟有效的预览链接；返回 draft_checksum 与 live_release_id</td></tr><tr><th scope="row"><code>set_categories</code></th><td><code>menu:write</code></td><td>整体替换分类列表，顺序即显示顺序</td></tr><tr><th scope="row"><code>upsert_product</code></th><td><code>menu:write</code></td><td>创建商品，或按 sku 只更新传入的字段</td></tr><tr><th scope="row"><code>bulk_upsert_products</code></th><td><code>menu:write</code></td><td>一次调用创建或更新最多 100 个商品，例如从照片或 PDF 读出的整份菜单</td></tr><tr><th scope="row"><code>set_product_availability</code></th><td><code>menu:write</code></td><td>在草稿中把商品上架或下架</td></tr><tr><th scope="row"><code>set_product_image</code></th><td><code>menu:write</code></td><td>用 https 链接或 base64 数据设置商品图（PNG、JPEG 或 WebP，不超过 640 KB）</td></tr><tr><th scope="row"><code>reorder_products</code></th><td><code>menu:write</code></td><td>按传入的 sku 顺序设置显示顺序</td></tr><tr><th scope="row"><code>publish_menu</code></th><td><code>menu:publish</code></td><td>只发布已预览的草稿；需要 preview_menu 返回的 draft_checksum 与 live_release_id；可用 effective_at_sgt 定时发布</td></tr><tr><th scope="row"><code>list_orders</code></th><td><code>orders:read</code></td><td>近期订单；除非 include_contact 为 true，否则电话号码会被遮盖</td></tr><tr><th scope="row"><code>get_kitchen_board</code></th><td><code>orders:read</code></td><td>今日已付款且未完成的订单，套餐组成项已展开</td></tr><tr><th scope="row"><code>advance_order</code></th><td><code>orders:write</code></td><td>把已付款订单推进到下一个厨房状态，或用 "to" 指定更靠后的状态</td></tr><tr><th scope="row"><code>set_store_open</code></th><td><code>store:write</code></td><td>立即暂停或恢复在线新订单</td></tr><tr><th scope="row"><code>get_sales_summary</code></th><td><code>reports:read</code></td><td>指定新加坡时间日期范围内的已付款订单、营收（新元）、GST、服务费与热销商品</td></tr></tbody></table></div><p>菜单修改先进入草稿，顾客只能看到已发布的版本。批量调用一次最多 100 个商品。</p></div></section>
+<section class="section alt" id="flow"><div class="wrap"><h2>MCP 示例流程：菜单照片，生成商品，预览，发布</h2><ol class="steps">
+<li><strong>接入。</strong>在 MCP 客户端中添加你的店铺，并使用带有所需权限的智能体密钥。</li>
+<li><strong>菜单照片。</strong>把菜单的照片或 PDF 交给智能体。</li>
+<li><strong>生成商品。</strong>智能体按需调用 <code>set_categories</code>，再调用 <code>bulk_upsert_products</code>，单品排在引用它们的套餐之前；可用 <code>set_product_image</code> 添加图片。</li>
+<li><strong>预览。</strong><code>preview_menu</code> 对比草稿与线上菜单，返回 <code>draft_checksum</code>、<code>live_release_id</code> 和 10 分钟有效的预览链接。</li>
+<li><strong>发布。</strong><code>publish_menu</code> 需要传入这个 <code>draft_checksum</code> 与 <code>live_release_id</code>。预览之后若有任何变动，就不会发布，智能体必须重新预览。</li>
+<li><strong>运营。</strong>如果密钥带有相应权限，同一个智能体还可以使用 <code>list_orders</code>、<code>get_kitchen_board</code>、<code>advance_order</code>、<code>set_store_open</code> 与 <code>get_sales_summary</code>。</li>
+</ol></div></section>
+<section class="section " id="connect"><div class="wrap"><h2>接入客户端</h2><p>把 <code>your-store.example</code> 换成你店铺的域名，把 <code>hlk_…</code> 换成在 <code>/admin</code> 创建的密钥。</p>
+<h3>Claude Code</h3><pre><code>claude mcp add --transport http my-store https://your-store.example/mcp \
+  --header &quot;Authorization: Bearer hlk_…&quot;</code></pre>
+<h3>使用 JSON 配置的 MCP 客户端</h3><p>不同客户端的字段名称不同；客户端必须能向远程 HTTP 服务发送 Authorization 请求头。</p><pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;my-store&quot;: {
+      &quot;type&quot;: &quot;http&quot;,
+      &quot;url&quot;: &quot;https://your-store.example/mcp&quot;,
+      &quot;headers&quot;: { &quot;Authorization&quot;: &quot;Bearer hlk_…&quot; }
+    }
+  }
+}</code></pre>
+<h3>REST</h3><pre><code>curl -s https://your-store.example/api/agent/v1/tools/list_products \
+  -H &quot;Authorization: Bearer hlk_…&quot; -H &quot;content-type: application/json&quot; \
+  -d '{&quot;only_on_sale&quot;:true}'</code></pre>
+<p>响应为 <code>{"ok":true,"result":{…}}</code> 或 <code>{"ok":false,"error":"…","code":"…"}</code>，并附 HTTP 状态码：400 参数无效，401 密钥无效，403 缺少权限，404，409 冲突，429 超出频率限制。</p></div></section>
+<section class="section alt" id="safety"><div class="wrap"><h2>安全机制</h2><ul><li><strong>预览校验码。</strong>智能体只能发布它预览过的那一版草稿。</li><li><strong>权限。</strong>每个密钥只能做它的权限允许的事。智能体密钥、支付、会员、退款与店铺设置仍只对店主开放。</li><li><strong>审计日志。</strong>智能体的每次调用都写入审计日志，店主可在 <code>/admin</code> 的 AI 接入页面查看。</li><li><strong>吊销。</strong>店主可立即吊销密钥。</li><li><strong>隐私。</strong>订单数据中的电话号码默认被遮盖，除非智能体用 <code>include_contact</code> 明确要求联系方式。</li><li><strong>过期修改保护。</strong>并发修改由版本号检查保护，过期的修改会被拒绝，而不是覆盖。</li><li><strong>回滚。</strong>回滚会用旧版本生成一个新的发布版本。</li></ul><p>更多说明：GitHub 上的 <a href="https://github.com/shuaige121/hawkerline/blob/main/docs/agents.md">智能体接入指南</a> 与 <a href="https://github.com/shuaige121/hawkerline/blob/main/docs/agent-tools.md">工具参考</a>。返回 <a href="../zh/index.html">Hawkerline 概览</a>。</p></div></section>
+</main>
+<footer class="site-footer"><div class="wrap">
+<p>Hawkerline 在 Hawkerline Community License 下源码公开，按现状提供，不附带担保。</p>
+<p>案例部署：<a href="https://poxiaoman.com">poxiaoman.com</a> · <a href="https://github.com/shuaige121/hawkerline">github.com/shuaige121/hawkerline</a> · <a href="../llms.txt">llms.txt</a></p>
+</div></footer>
+</body>
+</html>
