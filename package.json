@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "puppeteer-core": "^25.2.0",
-    "wrangler": "^4.95.0"
+    "wrangler": "^4.157.0"
   },
   "allowScripts": {
     "esbuild@0.28.1": true,
